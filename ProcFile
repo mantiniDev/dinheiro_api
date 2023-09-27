@@ -1,2 +1,2 @@
 #fazendo configuração
-worker: python dinheiro/main.py 
+worker: python main.py 
