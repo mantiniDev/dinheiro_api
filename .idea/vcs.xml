@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/API_heroku" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/JavaScript/js_impressionador" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Python/py_impressionador" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/TCC/helpList" vcs="Git" />
+  </component>
+</project>
