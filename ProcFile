@@ -1,2 +1,0 @@
-#fazendo configuração
-worker: python main.py 
