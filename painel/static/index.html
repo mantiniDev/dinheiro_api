@@ -8,27 +8,30 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>painel — mantini.ia.br</title>
 <link rel="manifest" href="/static/manifest.json">
-<link rel="icon" href="/static/mantini-icone.svg">
+<link rel="icon" href="/static/painel.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/mantini-favicon-32.png">
 <link rel="apple-touch-icon" href="/static/mantini-icone-512.png">
 <style>
+  /* Orbitron (SIL Open Font License 1.1 — ver static/fonts/OFL-Orbitron.txt) */
+  @font-face { font-family: 'Orbitron'; font-weight: 800; font-display: swap; src: url('/static/fonts/orbitron-800.woff2') format('woff2'); }
   /* Visual do mantini.ia.br (assets/base.css), adaptado para o celular DEITADO:
      tudo cabe na tela, sem rolar. O que não couber vira outra tela — arraste para o lado. */
   :root {
     --bg: #f5f6f8; --card: #ffffff; --text: #1d2129; --muted: #6b7280; --line: #e5e7eb;
-    --accent: #2563eb; --accent-soft: #e8efff; --roxo: #7c3aed;
-    --ok: #16a34a; --warn: #d97706; --danger: #dc2626;
+    --accent: #e63946; --accent-soft: #fdecee; --cinza: #4c6072;
+    --ok: #16a34a; --warn: #d97706; --danger: #b91c1c;
     --ok-soft: #dcfce7; --ok-txt: #166534; --warn-soft: #fef3c7; --warn-txt: #92400e; --danger-soft: #fee2e2;
     --shadow: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04);
-    --cpu: var(--accent); --ram: var(--roxo); --disco: #0891b2; --temp: var(--warn); --desce: #0891b2; --sobe: #db2777;
+    --cpu: var(--accent); --ram: var(--cinza); --disco: #0891b2; --temp: var(--warn); --desce: #0891b2; --sobe: var(--accent);
     --gap: clamp(6px, 2vh, 14px); --raio: 12px;
     --pad-x: max(var(--gap), env(safe-area-inset-left)); --pad-x2: max(var(--gap), env(safe-area-inset-right));
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #111318; --card: #1a1d24; --text: #e6e8ec; --muted: #9aa1ad; --line: #2a2f39;
-      --accent: #6b9bff; --accent-soft: #1f2a44; --roxo: #a78bfa; --shadow: none;
+      --accent: #ff5c66; --accent-soft: #3a1c20; --danger: #f87171; --cinza: #8fa6b8; --shadow: none;
       --ok-soft: #12301a; --ok-txt: #4ade80; --warn-soft: #3a2f10; --warn-txt: #fbbf24; --danger-soft: #3a1517;
-      --disco: #22d3ee; --desce: #22d3ee; --sobe: #f472b6; }
+      --disco: #22d3ee; --desce: #22d3ee; }
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
@@ -45,18 +48,19 @@
   .topbar { flex: none; display: flex; align-items: center; gap: clamp(6px, 2vh, 12px);
     height: clamp(36px, 11vh, 54px); padding: 0 var(--pad-x2) 0 var(--pad-x);
     background: var(--card); border-bottom: 1px solid var(--line); }
-  .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; }
-  .brand img { width: clamp(20px, 6.5vh, 28px); height: clamp(20px, 6.5vh, 28px); }
-  .brand .ia { color: var(--roxo); } .brand .tld { color: var(--muted); font-weight: 500; }
+  .brand { display: inline-flex; align-items: center; gap: 8px; font-family: 'Orbitron', system-ui, sans-serif; font-weight: 800; white-space: nowrap; font-size: .95em; }
+  .brand img, .sys-name img { width: clamp(20px, 6.5vh, 28px); height: clamp(20px, 6.5vh, 28px); flex: none; }
+  .brand .ia { color: var(--accent); } .brand .tld { color: var(--muted); font-weight: 500; }
+  .sys-name { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
   .sep { color: var(--muted); }
   .tabs { display: flex; gap: 4px; overflow: hidden; }
   .tabs button { padding: clamp(3px, 1vh, 6px) clamp(10px, 3vh, 16px); white-space: nowrap; font-size: .92em; }
   .tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .tabs .cont { display: inline-block; min-width: 1.4em; margin-left: 4px; padding: 0 5px; border-radius: 999px;
-    background: var(--warn); color: #fff; font-size: .8em; font-weight: 700; }
+    background: var(--warn); color: #fff; border: 1px solid #fff3; font-size: .8em; font-weight: 700; }
   .spacer { flex: 1; }
   .badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: .8em;
-    background: var(--accent-soft); color: var(--accent); white-space: nowrap; max-width: 30vw; overflow: hidden; text-overflow: ellipsis; }
+    background: var(--line); color: var(--muted); white-space: nowrap; max-width: 30vw; overflow: hidden; text-overflow: ellipsis; }
   .badge.on { background: var(--ok-soft); color: var(--ok-txt); }
   .badge.pause { background: var(--warn-soft); color: var(--warn-txt); }
   .badge.off { background: var(--danger-soft); color: var(--danger); }
@@ -78,7 +82,8 @@
 
   /* ---- Tela Geral ---- */
   #tGeral { grid-template-columns: 1fr 1.7fr 1fr; }
-  .relogio { font: 300 clamp(28px, 15vh, 110px)/1 system-ui, sans-serif; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .relogio { font: 800 clamp(24px, 13vh, 96px)/1 'Orbitron', system-ui, sans-serif; letter-spacing: .01em; }
+  .relogio .seg { color: var(--accent); animation: pisca 1s steps(1) infinite; } @keyframes pisca { 50% { opacity: .25; } }
   .data { color: var(--muted); margin-top: .4vh; }
   .pedidoMini { margin-top: auto; border-radius: var(--raio); padding: 1.6vh 1.8vh; border: 1px dashed var(--line); }
   .pedidoMini.tem { background: var(--warn-soft); border: 1px solid var(--warn); }
@@ -149,6 +154,7 @@
 <header class="topbar">
   <span class="brand"><img src="/static/mantini-icone.svg" alt=""><span>mantini<span class="ia">.ia</span><span class="tld">.br</span></span></span>
   <span class="sep">/</span>
+  <span class="sys-name"><img src="/static/painel.svg" alt="">painel</span>
   <nav class="tabs" id="abas"></nav>
   <span class="spacer"></span>
   <span class="badge" id="status">conectando…</span>
@@ -274,7 +280,8 @@
   // ---------------- relógio ----------------
   function relogio() {
     const d = new Date();
-    $("hora").textContent = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    const [hh, mm] = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }).split(":");
+    $("hora").innerHTML = `${hh}<span class="seg">:</span>${mm}`;
     $("data").textContent = d.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
   }
   relogio(); setInterval(relogio, 1000);
