@@ -317,15 +317,22 @@ if __name__ == "__main__":
     import uvicorn
 
     porta = int(CONFIG.get("porta", 8765))
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-        s.close()
-    except Exception:
-        ip = "IP-DO-PC"
+
+    # Lista todas as conexões do PC (Wi-Fi, cabo, Bluetooth...) para achar o link certo
+    links = []
+    for nome, enderecos in psutil.net_if_addrs().items():
+        for e in enderecos:
+            if e.family == socket.AF_INET and not e.address.startswith(("127.", "169.254.")):
+                bt = any(p in nome.lower() for p in ("bluetooth", "bnep", "pan"))
+                links.append((bt, nome, e.address))
+    links.sort(reverse=True)  # Bluetooth primeiro
+
     print("\n=== Painel de Controle ===")
-    print(f"No celular, abra:  http://{ip}:{porta}/?token={TOKEN}")
+    if not links:
+        print(f"No celular, abra:  http://IP-DO-PC:{porta}/?token={TOKEN}")
+    for bt, nome, ip in links:
+        marca = "  <- Bluetooth" if bt else ""
+        print(f"[{nome}]  http://{ip}:{porta}/?token={TOKEN}{marca}")
     print(f"Tópico ntfy:       {CONFIG.get('ntfy_topico')}")
     print("==========================\n")
     uvicorn.run(app, host="0.0.0.0", port=porta, log_level="warning")

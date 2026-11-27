@@ -83,12 +83,34 @@ No `config.json`, em `"acoes"`, cada item vira um botão no painel. Os exemplos 
 Use `"confirmar": true` para pedir confirmação antes de executar.
 **Só rodam os comandos que estão no arquivo**: o celular não envia comandos livres.
 
-## 5. Acessar fora de casa
+## 5. Conectar por Bluetooth (sem Wi-Fi)
+
+O celular cria uma pequena rede por Bluetooth (**ancoragem Bluetooth**) e o painel funciona igual.
+
+1. **Pareie** o celular com o PC (Configurações de Bluetooth do Windows → Adicionar dispositivo).
+2. **No Redmi:** *Configurações → Conexão e compartilhamento → Ancoragem Bluetooth* → **ativar**.
+3. **No Windows:** Painel de Controle → *Dispositivos e Impressoras* → botão direito no celular →
+   **Conectar usando → Ponto de acesso**.
+   (No Linux: `bluetoothctl` + `nmcli device connect <MAC-do-celular>`.)
+4. Rode `python servidor.py`. O link marcado `<- Bluetooth` (geralmente `192.168.44.x`) é o que você
+   abre no celular. Use esse mesmo endereço no `url_publica`.
+5. **Firewall do Windows:** a rede Bluetooth costuma entrar como "Pública". Libere o Python também
+   em redes públicas, ou mude o perfil dessa rede para *Privada*.
+
+Observações:
+- O Bluetooth é lento (cerca de 1 a 2 Mbps), mas sobra para o painel. O alcance é de uns 10 metros.
+- Com a ancoragem ligada, o PC pode passar a usar os **dados móveis** do celular para a internet.
+  Se o PC também estiver no Wi-Fi ou no cabo, o Windows costuma continuar preferindo essas conexões.
+  Para garantir que o celular não tenha internet para compartilhar, desligue os dados móveis.
+- O painel funciona mesmo **sem internet**: com ele aberto, o celular vibra quando chega pedido novo.
+  Já as notificações do ntfy precisam de internet no PC e no celular.
+
+## 6. Acessar fora de casa
 
 Instale o **Tailscale** no PC e no celular (gratuito). Depois use o IP do Tailscale (100.x.x.x)
 no link e no `url_publica`. Evite abrir a porta direto no roteador.
 
-## 6. Iniciar junto com o Windows
+## 7. Iniciar junto com o Windows
 
 Crie um atalho para `pythonw servidor.py` (pasta `painel`) dentro de
 `shell:startup`. Abra essa pasta com **Win + R**.
