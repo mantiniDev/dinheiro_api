@@ -32,7 +32,8 @@ Tópico ntfy:       painel-1a2b3c4d5e6f
 ## 2. No celular
 
 1. Conecte no **mesmo Wi-Fi** do PC.
-2. Abra o link mostrado no terminal no **Chrome**.
+2. No PC, abra **http://localhost:8765/qr** e aponte a câmera do celular para o QR code.
+   Ou digite no **Chrome** do celular o link mostrado no terminal.
 3. Menu ⋮ → **Adicionar à tela inicial**. Ele vira um app em tela cheia.
 
 ### Notificações com botões "Liberar / Negar"

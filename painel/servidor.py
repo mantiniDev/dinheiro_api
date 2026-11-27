@@ -10,6 +10,7 @@ Rodar:  python servidor.py
 """
 
 import asyncio
+import html
 import json
 import platform
 import secrets
@@ -21,8 +22,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import psutil
-from fastapi import Depends, FastAPI, Header, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -301,6 +302,50 @@ async def vigiar():
 app.mount("/static", StaticFiles(directory=PASTA / "static"), name="static")
 
 
+def _links() -> list[tuple[bool, str, str]]:
+    """(é_bluetooth, nome_da_conexão, ip) de cada conexão de rede do PC."""
+    import socket
+
+    links = []
+    for nome, enderecos in psutil.net_if_addrs().items():
+        for e in enderecos:
+            if e.family == socket.AF_INET and not e.address.startswith(("127.", "169.254.")):
+                bt = any(p in nome.lower() for p in ("bluetooth", "bnep", "pan"))
+                links.append((bt, nome, e.address))
+    return sorted(links, reverse=True)  # Bluetooth primeiro
+
+
+@app.get("/qr", response_class=HTMLResponse)
+def pagina_qr(request: Request):
+    """QR code com o link já com token. Só abre no próprio PC."""
+    if request.client is None or request.client.host not in ("127.0.0.1", "::1"):
+        raise HTTPException(403, "Abra esta página no próprio PC (http://localhost:8765/qr)")
+    porta = int(CONFIG.get("porta", 8765))
+    try:
+        import qrcode
+        import qrcode.image.svg
+    except ImportError:
+        return "<p>Instale o gerador de QR code: <code>pip install qrcode</code> e reinicie o painel.</p>"
+    blocos = []
+    for bt, nome, ip in _links():
+        url = f"http://{ip}:{porta}/?token={TOKEN}"
+        svg = qrcode.make(url, image_factory=qrcode.image.svg.SvgPathImage, box_size=12).to_string(encoding="unicode")
+        blocos.append(
+            f"<div class='b'><h2>{'📶 Bluetooth' if bt else '🌐 ' + html.escape(nome)}</h2>"
+            f"<div class='qr'>{svg}</div><code>{html.escape(url)}</code></div>"
+        )
+    corpo = "".join(blocos) or "<p>Nenhuma conexão de rede encontrada.</p>"
+    return (
+        "<!DOCTYPE html><html lang='pt-BR'><meta charset='utf-8'><title>Conectar celular</title>"
+        "<style>body{font-family:system-ui;background:#0f1115;color:#e7e9ee;text-align:center;padding:20px}"
+        ".b{display:inline-block;margin:12px;padding:16px;background:#181b22;border-radius:16px;vertical-align:top}"
+        ".qr{background:#fff;padding:12px;border-radius:12px;display:inline-block}.qr svg{width:260px;height:260px}"
+        "code{display:block;margin-top:10px;font-size:12px;color:#8b92a1;word-break:break-all;max-width:300px}</style>"
+        "<h1>Aponte a câmera do celular</h1><p>O celular precisa estar na mesma rede (Wi-Fi ou Bluetooth).</p>"
+        f"{corpo}</html>"
+    )
+
+
 @app.get("/")
 def pagina():
     return FileResponse(PASTA / "static" / "index.html")
@@ -318,14 +363,7 @@ if __name__ == "__main__":
 
     porta = int(CONFIG.get("porta", 8765))
 
-    # Lista todas as conexões do PC (Wi-Fi, cabo, Bluetooth...) para achar o link certo
-    links = []
-    for nome, enderecos in psutil.net_if_addrs().items():
-        for e in enderecos:
-            if e.family == socket.AF_INET and not e.address.startswith(("127.", "169.254.")):
-                bt = any(p in nome.lower() for p in ("bluetooth", "bnep", "pan"))
-                links.append((bt, nome, e.address))
-    links.sort(reverse=True)  # Bluetooth primeiro
+    links = _links()
 
     print("\n=== Painel de Controle ===")
     if not links:
@@ -333,6 +371,7 @@ if __name__ == "__main__":
     for bt, nome, ip in links:
         marca = "  <- Bluetooth" if bt else ""
         print(f"[{nome}]  http://{ip}:{porta}/?token={TOKEN}{marca}")
+    print(f"QR code p/ celular: abra http://localhost:{porta}/qr no navegador do PC")
     print(f"Tópico ntfy:       {CONFIG.get('ntfy_topico')}")
     print("==========================\n")
     uvicorn.run(app, host="0.0.0.0", port=porta, log_level="warning")

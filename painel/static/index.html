@@ -66,9 +66,11 @@
 </header>
 
 <section id="login" class="cartao">
-  <div>Cole o token mostrado no terminal do PC:</div>
-  <input id="campoToken" placeholder="token" autocomplete="off">
-  <button class="aprovar" onclick="salvarToken()">Entrar</button>
+  <div>Mais fácil: no PC, abra <b>http://localhost:8765/qr</b> e aponte a câmera do celular para o QR code.</div>
+  <div style="margin-top:12px">Ou cole aqui o token (ou o link inteiro) mostrado no terminal do PC:</div>
+  <input id="campoToken" placeholder="token" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <div id="erroToken" style="color:var(--erro);font-size:14px;min-height:20px"></div>
+  <button class="aprovar" id="botaoEntrar" onclick="salvarToken()">Entrar</button>
 </section>
 
 <main id="conteudo">
@@ -103,15 +105,34 @@
   }
   let token = localStorage.getItem("token");
 
-  function salvarToken() {
-    token = document.getElementById("campoToken").value.trim();
-    localStorage.setItem("token", token);
-    document.getElementById("login").style.display = "none";
-    document.getElementById("conteudo").style.display = "";
-    atualizar();
+  async function salvarToken() {
+    let valor = document.getElementById("campoToken").value.trim();
+    const achado = valor.match(/token=([A-Za-z0-9_-]+)/);  // aceita o link inteiro
+    if (achado) valor = achado[1];
+    valor = valor.replace(/\s+/g, "");
+    const erro = document.getElementById("erroToken"), botao = document.getElementById("botaoEntrar");
+    if (!valor) { erro.textContent = "Digite o token."; return; }
+    botao.disabled = true; botao.textContent = "Verificando…"; erro.textContent = "";
+    try {
+      const r = await fetch("/api/status", { headers: { Authorization: "Bearer " + valor } });
+      if (r.status === 401) { erro.textContent = "Token errado. Confira letras maiúsculas e minúsculas."; return; }
+      if (!r.ok) { erro.textContent = "O PC respondeu com erro " + r.status + "."; return; }
+      token = valor;
+      localStorage.setItem("token", token);
+      emLogin = false;
+      document.getElementById("login").style.display = "none";
+      document.getElementById("conteudo").style.display = "";
+      atualizar();
+    } catch (e) {
+      erro.textContent = "Não consegui falar com o PC. O painel está rodando?";
+    } finally {
+      botao.disabled = false; botao.textContent = "Entrar";
+    }
   }
 
+  let emLogin = false;
   function pedirLogin() {
+    emLogin = true;
     document.getElementById("login").style.display = "block";
     document.getElementById("conteudo").style.display = "none";
   }
@@ -206,6 +227,7 @@
 
   async function atualizar() {
     if (!token) return pedirLogin();
+    if (emLogin) return;  // não fica piscando enquanto a pessoa digita o token
     try {
       await Promise.all([atualizarStatus(), atualizarPedidos()]);
       if (!acoesCarregadas) carregarAcoes().catch(() => {});
