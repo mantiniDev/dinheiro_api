@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layout: Medidores</title>
+<style>
+body{margin:0;background:#0b0d12;color:#e8eaf0;font:15px/1.4 system-ui,Roboto,sans-serif;padding:16px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.top h1{font-size:20px;margin:0}.dot{color:#8b92a1;font-size:13px}.dot::before{content:"● ";color:#3fb950}
+.alerta{background:linear-gradient(135deg,#3a2a08,#2a1f0a);border:1px solid #6b4f12;border-radius:18px;padding:14px;margin-bottom:16px}
+.alerta b{display:block;font-size:16px}.alerta small{color:#d9b35b}
+.bt{display:flex;gap:8px;margin-top:10px}.bt button{flex:1;border:0;border-radius:12px;padding:12px;font:600 15px system-ui;color:#fff}
+.ok{background:#238636}.no{background:#b62324}
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g{background:#141821;border-radius:20px;padding:14px;text-align:center;border:1px solid #1f2430}
+.g svg{width:100%;max-width:140px}.g .n{font-size:13px;color:#8b92a1;margin-top:-4px}
+.g text{font:700 26px system-ui;fill:#e8eaf0}.g .u{font:500 12px system-ui;fill:#8b92a1}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.mini{background:#141821;border:1px solid #1f2430;border-radius:16px;padding:10px 12px}
+.mini span{display:block;color:#8b92a1;font-size:12px}.mini b{font-size:17px}
+</style></head><body>
+<div class="top"><h1>🖥️ PC-GAMER</h1><span class="dot">online · Bluetooth</span></div>
+<div class="alerta"><small>🔐 PEDIDO DE LIBERAÇÃO · 21:04</small><b>Liberar internet — PC do quarto</b>
+<div class="bt"><button class="ok">✅ Liberar</button><button class="no">❌ Negar</button></div></div>
+<div class="gauges" id="g"></div>
+<div class="row">
+<div class="mini"><span>↓ Rede</span><b>12,4 MB/s</b></div>
+<div class="mini"><span>Ping</span><b>14 ms</b></div>
+<div class="mini"><span>Ligado</span><b>5h 12m</b></div></div>
+<script>
+const dados=[["CPU",37,"%","#4c8dff"],["GPU",82,"%","#a371f7"],["RAM",64,"%","#3fb950"],["Temp. CPU",71,"°C","#d29922"]];
+document.getElementById("g").innerHTML=dados.map(([n,v,u,c])=>{const r=52,C=2*Math.PI*r,arc=C*.75,f=arc*Math.min(v,100)/100;
+return `<div class="g"><svg viewBox="0 0 140 130"><g transform="rotate(135 70 70)">
+<circle cx="70" cy="70" r="${r}" fill="none" stroke="#232938" stroke-width="12" stroke-linecap="round" stroke-dasharray="${arc} ${C}"/>
+<circle cx="70" cy="70" r="${r}" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${f} ${C}"/></g>
+<text x="70" y="78" text-anchor="middle">${v}<tspan class="u">${u}</tspan></text></svg><div class="n">${n}</div></div>`}).join("");
+</script></body></html>

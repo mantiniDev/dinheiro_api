@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layout: Deck de botões</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font:14px system-ui,Roboto,sans-serif;padding:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.chips span{background:#16181d;border:1px solid #262a33;border-radius:99px;padding:6px 10px;font-size:13px}
+.chips b{color:#7ee787}.pag{display:flex;gap:6px;margin-bottom:12px}.pag span{padding:6px 12px;border-radius:99px;background:#16181d;color:#8b92a1;font-size:13px}
+.pag .on{background:#fff;color:#000;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.k{aspect-ratio:1;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:13px;text-align:center}
+.k i{font-style:normal;font-size:30px}.k.ativo{outline:3px solid #fff}
+.p{margin-top:14px;background:#16181d;border:1px solid #f0b72f66;border-radius:18px;padding:12px;display:flex;align-items:center;gap:10px}
+.p div{flex:1}.p small{color:#f0b72f}.p button{border:0;border-radius:12px;width:48px;height:48px;font-size:20px}
+</style></head><body>
+<div class="chips"><span>CPU <b>37%</b></span><span>RAM <b>64%</b></span><span>GPU <b>66°C</b></span><span>🔊 <b>45%</b></span></div>
+<div class="pag"><span class="on">Geral</span><span>Live/OBS</span><span>Jogos</span><span>Casa</span></div>
+<div class="grid" id="g"></div>
+<div class="p"><div><small>🔐 Pedido · agora</small><br><b>Liberar internet do quarto</b></div>
+<button style="background:#238636">✓</button><button style="background:#b62324">✕</button></div>
+<script>
+const k=[["🎙️","Mic ligado","#1f6feb",1],["🔈","Vol −","#30363d"],["🔊","Vol +","#30363d"],["⏮️","Anterior","#30363d"],["⏯️","Play/Pausa","#238636"],["⏭️","Próxima","#30363d"],
+["🔴","Gravar OBS","#b62324"],["📸","Print da tela","#8957e5"],["🎧","Fone ⇄ Caixa","#9e6a03"],["🔒","Bloquear","#30363d"],["😴","Suspender","#30363d"],["⏻","Desligar","#6e1b1b"]];
+document.getElementById("g").innerHTML=k.map(([i,n,c,a])=>`<div class="k${a?" ativo":""}" style="background:${c}"><i>${i}</i>${n}</div>`).join("");
+</script></body></html>

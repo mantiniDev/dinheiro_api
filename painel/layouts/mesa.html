@@ -1,0 +1,35 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layout: Mesa (paisagem)</title>
+<style>
+*{box-sizing:border-box}body{margin:0;height:100vh;background:#0e1116;color:#e6e8ee;font:14px/1.35 system-ui,Roboto,sans-serif;padding:12px;
+display:grid;grid-template-columns:1.05fr 1.6fr 1fr;gap:10px}
+.c{background:#161a22;border:1px solid #232835;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.hora{font:700 52px/1 system-ui;letter-spacing:-1px}.data{color:#8b92a1}
+.ped{background:#2a210c;border:1px solid #5c4614;border-radius:12px;padding:10px}.ped b{display:block}
+.ped small{color:#d9b35b}.bt{display:flex;gap:6px;margin-top:8px}.bt button{flex:1;border:0;border-radius:9px;padding:9px;font:600 13px system-ui;color:#fff}
+.ok{background:#238636}.no{background:#b62324}
+h3{margin:0;font-size:12px;color:#8b92a1;text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between}
+h3 em{font-style:normal;color:#e6e8ee}svg{width:100%;flex:1}
+.kv{display:flex;justify-content:space-between;border-bottom:1px solid #222734;padding:5px 0}.kv span{color:#8b92a1}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:auto}.acts button{background:#1d222c;border:1px solid #2a3040;color:#e6e8ee;border-radius:10px;padding:10px 4px;font:600 13px system-ui}
+.leg{display:flex;gap:12px;font-size:12px;color:#8b92a1}.leg i{display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle}
+</style></head><body>
+<div class="c"><div class="hora">21:04</div><div class="data">sexta, 27 de novembro</div>
+<div class="ped"><small>🔐 PEDIDO</small><b>Instalar Steam no PC do quarto</b><div class="bt"><button class="ok">Liberar</button><button class="no">Negar</button></div></div>
+<div style="color:#8b92a1;font-size:12px;margin-top:auto">🌤️ 27°C São Paulo · 💵 US$ 5,32</div></div>
+<div class="c"><h3>Uso nos últimos 5 min <em>CPU 37% · RAM 64%</em></h3>
+<div class="leg"><span><i style="background:#4c8dff"></i>CPU</span><span><i style="background:#3fb950"></i>RAM</span><span><i style="background:#a371f7"></i>GPU</span></div>
+<svg id="graf" viewBox="0 0 300 140" preserveAspectRatio="none"></svg>
+<h3>Rede <em>↓ 12,4 MB/s · ↑ 0,8 MB/s</em></h3></div>
+<div class="c"><h3>PC-GAMER</h3>
+<div class="kv"><span>GPU</span><b>RTX 3060 · 66°C</b></div>
+<div class="kv"><span>Disco C:</span><b>412/931 GB</b></div>
+<div class="kv"><span>Ping</span><b>14 ms</b></div>
+<div class="kv"><span>Tocando</span><b>Lo-fi beats</b></div>
+<div class="acts"><button>🔇 Mic</button><button>⏯️ Play</button><button>🔒 Bloquear</button><button>⏻ Desligar</button></div></div>
+<script>
+const s=(seed,base,amp)=>Array.from({length:60},(_,i)=>base+amp*Math.sin(i/5+seed)+amp*.6*Math.sin(i/1.7+seed*3));
+const linha=(v,c)=>`<polyline fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke" points="${v.map((y,i)=>`${i*300/59},${140-y*1.4}`).join(" ")}"/>`;
+const grade=[25,50,75].map(y=>`<line x1="0" x2="300" y1="${140-y*1.4}" y2="${140-y*1.4}" stroke="#232835" vector-effect="non-scaling-stroke"/>`).join("");
+document.getElementById("graf").innerHTML=grade+linha(s(1,64,3),"#3fb950")+linha(s(2,40,14),"#4c8dff")+linha(s(4,70,18),"#a371f7");
+</script></body></html>
