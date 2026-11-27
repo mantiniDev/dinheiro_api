@@ -184,8 +184,10 @@
     atualizarPedidos();
   }
 
+  let acoesCarregadas = false;
   async function carregarAcoes() {
     const acoes = await api("/api/acoes");
+    acoesCarregadas = true;
     if (!acoes.length) return;
     $("acoes").innerHTML = "";
     for (const a of acoes) {
@@ -206,6 +208,7 @@
     if (!token) return pedirLogin();
     try {
       await Promise.all([atualizarStatus(), atualizarPedidos()]);
+      if (!acoesCarregadas) carregarAcoes().catch(() => {});
       $("conexao").textContent = "online"; $("conexao").className = "ok";
     } catch (e) {
       $("conexao").textContent = "sem conexão"; $("conexao").className = "erro";
@@ -213,7 +216,6 @@
   }
 
   atualizar();
-  if (token) carregarAcoes().catch(() => {});
   setInterval(atualizar, 3000);
 
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
