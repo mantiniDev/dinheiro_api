@@ -1,0 +1,31 @@
+{
+  "token": "SERA_GERADO_AUTOMATICAMENTE",
+  "porta": 8765,
+  "url_publica": "",
+  "ntfy_servidor": "https://ntfy.sh",
+  "ntfy_topico": "SERA_GERADO_AUTOMATICAMENTE",
+  "alertas": {
+    "cpu_pct": 90,
+    "ram_pct": 90,
+    "disco_pct": 95
+  },
+  "acoes": {
+    "bloquear_tela": {
+      "nome": "🔒 Bloquear tela",
+      "comando": ["rundll32.exe", "user32.dll,LockWorkStation"]
+    },
+    "abrir_calculadora": {
+      "nome": "🧮 Abrir calculadora",
+      "comando": ["calc.exe"]
+    },
+    "desligar": {
+      "nome": "⏻ Desligar em 60s",
+      "comando": ["shutdown", "/s", "/t", "60"],
+      "confirmar": true
+    },
+    "cancelar_desligar": {
+      "nome": "↩️ Cancelar desligamento",
+      "comando": ["shutdown", "/a"]
+    }
+  }
+}

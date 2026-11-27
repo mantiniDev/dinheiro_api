@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<title>Painel</title>
+<link rel="manifest" href="/static/manifest.json">
+<link rel="icon" href="/static/icone.svg">
+<style>
+  :root {
+    --fundo: #0f1115; --cartao: #181b22; --borda: #262a33; --texto: #e7e9ee;
+    --fraco: #8b92a1; --ok: #3fb950; --alerta: #d29922; --erro: #f85149; --azul: #4c8dff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fundo); color: var(--texto);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: max(12px, env(safe-area-inset-top)) 12px 24px;
+  }
+  header { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 4px 12px; }
+  header h1 { font-size: 20px; margin: 0; }
+  #conexao { font-size: 13px; color: var(--fraco); }
+  #conexao.ok::before { content: "● "; color: var(--ok); }
+  #conexao.erro::before { content: "● "; color: var(--erro); }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--fraco); margin: 20px 4px 8px; }
+  .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: 14px; padding: 12px 14px; }
+  .rotulo { color: var(--fraco); font-size: 13px; }
+  .valor { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .sub { color: var(--fraco); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .barra { height: 6px; background: var(--borda); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .barra > i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .4s; }
+  .barra > i.alto { background: var(--alerta); } .barra > i.critico { background: var(--erro); }
+  .lista { display: flex; flex-direction: column; gap: 8px; }
+  .pedido { display: flex; flex-direction: column; gap: 8px; }
+  .pedido .topo { display: flex; justify-content: space-between; gap: 8px; }
+  .pedido .titulo { font-weight: 600; }
+  .estado { font-size: 12px; padding: 2px 8px; border-radius: 99px; white-space: nowrap; align-self: flex-start; }
+  .estado.pendente { background: #3a2f10; color: var(--alerta); }
+  .estado.aprovado { background: #12301a; color: var(--ok); }
+  .estado.negado { background: #3a1517; color: var(--erro); }
+  .botoes { display: flex; gap: 8px; }
+  button {
+    flex: 1; border: 0; border-radius: 10px; padding: 12px; font: inherit; font-weight: 600;
+    color: #fff; background: var(--borda); cursor: pointer;
+  }
+  button:active { transform: scale(.98); }
+  button.aprovar { background: #238636; } button.negar { background: #b62324; }
+  .acoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .acoes button { background: var(--cartao); border: 1px solid var(--borda); padding: 16px 12px; }
+  .vazio { color: var(--fraco); text-align: center; padding: 16px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  td { padding: 4px 0; } td:last-child { text-align: right; color: var(--fraco); }
+  #aviso { position: fixed; left: 12px; right: 12px; bottom: 16px; background: #222733; border: 1px solid var(--borda);
+    padding: 12px 14px; border-radius: 12px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  #aviso.ver { opacity: 1; }
+  #login { display: none; }
+  #login input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); font: inherit; margin: 8px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="nomePc">Painel</h1>
+  <span id="conexao">conectando…</span>
+</header>
+
+<section id="login" class="cartao">
+  <div>Cole o token mostrado no terminal do PC:</div>
+  <input id="campoToken" placeholder="token" autocomplete="off">
+  <button class="aprovar" onclick="salvarToken()">Entrar</button>
+</section>
+
+<main id="conteudo">
+  <h2>Pedidos de liberação</h2>
+  <div id="pedidos" class="lista"><div class="vazio">Nenhum pedido.</div></div>
+
+  <h2>PC</h2>
+  <div class="grade">
+    <div class="cartao"><div class="rotulo">CPU</div><div class="valor" id="cpu">–</div><div class="sub" id="cpuSub"></div><div class="barra"><i id="cpuBarra"></i></div></div>
+    <div class="cartao"><div class="rotulo">RAM</div><div class="valor" id="ram">–</div><div class="sub" id="ramSub"></div><div class="barra"><i id="ramBarra"></i></div></div>
+    <div class="cartao"><div class="rotulo">Disco</div><div class="valor" id="disco">–</div><div class="sub" id="discoSub"></div><div class="barra"><i id="discoBarra"></i></div></div>
+    <div class="cartao"><div class="rotulo">Rede</div><div class="valor" id="rede" style="font-size:18px">–</div><div class="sub" id="redeSub"></div></div>
+    <div class="cartao"><div class="rotulo">Ligado há</div><div class="valor" id="uptime" style="font-size:20px">–</div><div class="sub" id="sistema"></div></div>
+    <div class="cartao" id="cartaoExtra"><div class="rotulo">Temperatura / bateria</div><div class="valor" id="extra" style="font-size:20px">–</div></div>
+  </div>
+
+  <h2>Ações</h2>
+  <div id="acoes" class="acoes"><div class="vazio">Nenhuma ação cadastrada.</div></div>
+
+  <h2>Processos que mais usam RAM</h2>
+  <div class="cartao"><table id="processos"></table></div>
+</main>
+
+<div id="aviso"></div>
+
+<script>
+  // ---- token: vem do link (?token=...) na 1ª vez e fica salvo no celular ----
+  const params = new URLSearchParams(location.search);
+  if (params.get("token")) {
+    localStorage.setItem("token", params.get("token"));
+    history.replaceState(null, "", "/");
+  }
+  let token = localStorage.getItem("token");
+
+  function salvarToken() {
+    token = document.getElementById("campoToken").value.trim();
+    localStorage.setItem("token", token);
+    document.getElementById("login").style.display = "none";
+    document.getElementById("conteudo").style.display = "";
+    atualizar();
+  }
+
+  function pedirLogin() {
+    document.getElementById("login").style.display = "block";
+    document.getElementById("conteudo").style.display = "none";
+  }
+
+  async function api(caminho, metodo = "GET") {
+    const r = await fetch(caminho, { method: metodo, headers: { Authorization: "Bearer " + token } });
+    if (r.status === 401) { pedirLogin(); throw new Error("token"); }
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function aviso(texto) {
+    const el = $("aviso"); el.textContent = texto; el.classList.add("ver");
+    clearTimeout(aviso.t); aviso.t = setTimeout(() => el.classList.remove("ver"), 2500);
+  }
+
+  function barra(id, pct) {
+    const el = $(id); el.style.width = pct + "%";
+    el.className = pct >= 90 ? "critico" : pct >= 70 ? "alto" : "";
+  }
+
+  function duracao(s) {
+    const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+    return d ? `${d}d ${h}h` : h ? `${h}h ${m}min` : `${m}min`;
+  }
+
+  function velocidade(kbs) { return kbs >= 1024 ? (kbs / 1024).toFixed(1) + " MB/s" : Math.round(kbs) + " KB/s"; }
+
+  async function atualizarStatus() {
+    const s = await api("/api/status");
+    $("nomePc").textContent = s.nome_pc;
+    $("cpu").textContent = Math.round(s.cpu_pct) + "%"; $("cpuSub").textContent = s.cpu_nucleos + " núcleos"; barra("cpuBarra", s.cpu_pct);
+    $("ram").textContent = Math.round(s.ram.pct) + "%"; $("ramSub").textContent = `${s.ram.usado_gb} de ${s.ram.total_gb} GB`; barra("ramBarra", s.ram.pct);
+    if (s.disco) { $("disco").textContent = Math.round(s.disco.pct) + "%"; $("discoSub").textContent = `${s.disco.usado_gb} de ${s.disco.total_gb} GB`; barra("discoBarra", s.disco.pct); }
+    $("rede").textContent = "↓ " + velocidade(s.rede.descida_kbs); $("redeSub").textContent = "↑ " + velocidade(s.rede.subida_kbs);
+    $("uptime").textContent = duracao(s.ligado_ha_s); $("sistema").textContent = s.sistema;
+    const extra = [];
+    if (s.temperatura_c != null) extra.push(s.temperatura_c + " °C");
+    if (s.bateria) extra.push(s.bateria.pct + "%" + (s.bateria.carregando ? " ⚡" : ""));
+    $("extra").textContent = extra.join(" · ") || "n/d";
+    $("processos").innerHTML = s.top_processos.map((p) => `<tr><td>${esc(p.nome)}</td><td>${p.ram_mb} MB</td></tr>`).join("");
+  }
+
+  let pendentesAntes = new Set();
+  async function atualizarPedidos() {
+    const lista = await api("/api/pedidos");
+    const pendentes = new Set(lista.filter((p) => p.estado === "pendente").map((p) => p.id));
+    for (const id of pendentes) if (!pendentesAntes.has(id) && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    pendentesAntes = pendentes;
+    if (!lista.length) { $("pedidos").innerHTML = '<div class="vazio">Nenhum pedido.</div>'; return; }
+    $("pedidos").innerHTML = lista.slice(0, 10).map((p) => `
+      <div class="cartao pedido">
+        <div class="topo">
+          <div><div class="titulo">${esc(p.titulo)}</div>
+          <div class="sub">${esc(p.detalhe || p.origem)} · ${new Date(p.criado_em * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div>
+          <span class="estado ${p.estado}">${p.estado}</span>
+        </div>
+        ${p.estado === "pendente" ? `<div class="botoes">
+          <button class="aprovar" onclick="decidir('${p.id}','aprovar')">✅ Liberar</button>
+          <button class="negar" onclick="decidir('${p.id}','negar')">❌ Negar</button></div>` : ""}
+      </div>`).join("");
+  }
+
+  async function decidir(id, acao) {
+    await api(`/api/pedidos/${id}/${acao}`, "POST");
+    aviso(acao === "aprovar" ? "Liberado ✅" : "Negado ❌");
+    atualizarPedidos();
+  }
+
+  async function carregarAcoes() {
+    const acoes = await api("/api/acoes");
+    if (!acoes.length) return;
+    $("acoes").innerHTML = "";
+    for (const a of acoes) {
+      const b = document.createElement("button");
+      b.textContent = a.nome;
+      b.onclick = () => executar(a.id, a.confirmar, a.nome);
+      $("acoes").appendChild(b);
+    }
+  }
+
+  async function executar(id, confirmar, nome) {
+    if (confirmar && !confirm(`Executar "${nome}"?`)) return;
+    const r = await api(`/api/acoes/${id}`, "POST");
+    aviso(r.ok ? `${nome}: feito` : `${nome}: erro (${r.codigo})`);
+  }
+
+  async function atualizar() {
+    if (!token) return pedirLogin();
+    try {
+      await Promise.all([atualizarStatus(), atualizarPedidos()]);
+      $("conexao").textContent = "online"; $("conexao").className = "ok";
+    } catch (e) {
+      $("conexao").textContent = "sem conexão"; $("conexao").className = "erro";
+    }
+  }
+
+  atualizar();
+  if (token) carregarAcoes().catch(() => {});
+  setInterval(atualizar, 3000);
+
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+  // Mantém a tela ligada quando usado como painel fixo (Chrome Android)
+  if ("wakeLock" in navigator) {
+    const manter = () => navigator.wakeLock.request("screen").catch(() => {});
+    manter(); document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && manter());
+  }
+</script>
+</body>
+</html>
