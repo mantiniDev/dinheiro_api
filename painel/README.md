@@ -8,8 +8,9 @@ Transforma o celular (ex.: Redmi Note 10S) num painel que:
 - **executa ações** cadastradas por você (bloquear tela, desligar etc.);
 - **avisa** quando CPU, RAM ou disco passam do limite.
 
+Usa o visual do **mantini.ia.br** (tema claro ou escuro, segue o do celular).
 Feito para o celular **deitado**: tudo cabe na tela, sem rolar. O que não couber vira outra tela,
-e você troca **arrastando para o lado** (Geral → Ações → Histórico → Pedidos).
+e você troca **arrastando para o lado** ou tocando nas abas do topo (Geral → Ações → Histórico → Pedidos).
 
 <img src="print_celular.png" width="600">
 <img src="print_acoes.png" width="600">
@@ -17,6 +18,12 @@ e você troca **arrastando para o lado** (Geral → Ações → Histórico → P
 ## 1. No PC
 
 Precisa de Python 3.10 ou mais novo.
+
+**Jeito fácil (Windows):** dê dois cliques em **`iniciar-painel.bat`**. Ele atualiza o painel, instala o que
+faltar e deixa o painel rodando (se cair, ele religa sozinho). Para o painel **iniciar junto com o Windows**,
+dê dois cliques em **`instalar-inicio-automatico.bat`**; para desfazer, use `remover-inicio-automatico.bat`.
+
+**Pelo terminal:**
 
 ```bash
 cd painel
@@ -75,8 +82,22 @@ Cabeçalho: Authorization: Bearer <token>
 
 ## 4. Cadastrar ações
 
-No `config.json`, em `"acoes"`, cada item vira um botão no painel. Os exemplos que vêm prontos são para
-**Windows**. No Linux, troque os comandos, por exemplo `["loginctl", "lock-session"]`.
+No `config.json`, em `"acoes"`, cada item vira um botão no painel. Já vêm prontas (Windows): bloquear tela,
+volume −/+, mudo, anterior/play/próxima, mutar mic em chamadas (Win+Alt+K), print, recortar tela,
+mostrar área de trabalho, explorador, gerenciador de tarefas, calculadora, suspender, reiniciar,
+desligar e cancelar. Quem tinha um `config.json` antigo recebe as ações novas automaticamente.
+
+Uma ação pode rodar um **comando** ou apertar **teclas de atalho**:
+
+```json
+"abrir_obs":   { "nome": "🎬 OBS",            "comando": ["cmd", "/c", "start", "", "obs64.exe"] },
+"gravar_obs":  { "nome": "🔴 Gravar",         "teclas": ["ctrl", "shift", "f9"] },
+"fechar_janela": { "nome": "✖️ Fechar janela", "teclas": ["alt", "f4"], "confirmar": true }
+```
+
+Teclas aceitas: letras e números, `win`, `ctrl`, `shift`, `alt`, `tab`, `esc`, `enter`, `espaco`,
+`printscreen`, `delete`, `f1`…`f12`, `volume_mais`, `volume_menos`, `volume_mudo`, `play_pausa`,
+`proxima`, `anterior`, `parar`. O emoji no começo do nome vira o ícone do botão. Reinicie o painel depois de editar.
 
 ```json
 "abrir_spotify": {
@@ -117,8 +138,8 @@ no link e no `url_publica`. Evite abrir a porta direto no roteador.
 
 ## 7. Iniciar junto com o Windows
 
-Crie um atalho para `pythonw servidor.py` (pasta `painel`) dentro de
-`shell:startup`. Abra essa pasta com **Win + R**.
+Dê dois cliques em `instalar-inicio-automatico.bat`. Ele cria um atalho na pasta de inicialização do Windows
+que abre o `iniciar-painel.bat` minimizado.
 
 ## Segurança
 

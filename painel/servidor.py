@@ -34,14 +34,30 @@ ARQ_CONFIG = PASTA / "config.json"
 # --------------------------------------------------------------------------
 # Configuração
 # --------------------------------------------------------------------------
+VERSAO_ACOES = 2  # suba este número quando o config.exemplo.json ganhar ações novas
+
+
 def carregar_config() -> dict:
+    exemplo = json.loads((PASTA / "config.exemplo.json").read_text(encoding="utf-8"))
     if not ARQ_CONFIG.exists():
-        exemplo = json.loads((PASTA / "config.exemplo.json").read_text(encoding="utf-8"))
         exemplo["token"] = secrets.token_urlsafe(24)
         exemplo["ntfy_topico"] = "painel-" + secrets.token_hex(6)
+        exemplo["versao_acoes"] = VERSAO_ACOES
         ARQ_CONFIG.write_text(json.dumps(exemplo, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"[painel] config.json criado em {ARQ_CONFIG}")
-    return json.loads(ARQ_CONFIG.read_text(encoding="utf-8"))
+    config = json.loads(ARQ_CONFIG.read_text(encoding="utf-8"))
+
+    # Quem já tinha um config.json antigo ganha as ações novas do exemplo
+    # (as que a pessoa já tem, ou editou, ficam como estão).
+    if config.get("versao_acoes", 1) < VERSAO_ACOES:
+        antigas = config.get("acoes", {})
+        novas = {k: antigas.get(k, v) for k, v in exemplo["acoes"].items()}
+        novas.update({k: v for k, v in antigas.items() if k not in novas})
+        config["acoes"] = novas
+        config["versao_acoes"] = VERSAO_ACOES
+        ARQ_CONFIG.write_text(json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"[painel] config.json atualizado com {len(novas) - len(antigas)} ações novas")
+    return config
 
 
 CONFIG = carregar_config()
@@ -257,12 +273,51 @@ def listar_acoes():
             for k, v in CONFIG.get("acoes", {}).items()]
 
 
+# Teclas virtuais do Windows (https://learn.microsoft.com/windows/win32/inputdev/virtual-key-codes)
+TECLAS = {
+    "volume_mudo": 0xAD, "volume_menos": 0xAE, "volume_mais": 0xAF,
+    "proxima": 0xB0, "anterior": 0xB1, "parar": 0xB2, "play_pausa": 0xB3,
+    "win": 0x5B, "shift": 0x10, "ctrl": 0x11, "alt": 0x12, "tab": 0x09, "esc": 0x1B,
+    "enter": 0x0D, "espaco": 0x20, "printscreen": 0x2C, "delete": 0x2E,
+    **{f"f{i}": 0x6F + i for i in range(1, 13)},
+}
+
+
+def apertar_teclas(nomes: list[str]):
+    """Aperta as teclas juntas (ex.: ["win", "shift", "s"]) e solta na ordem inversa."""
+    if platform.system() != "Windows":
+        raise RuntimeError("Atalhos de teclado só funcionam no Windows")
+    import ctypes
+
+    codigos = []
+    for nome in nomes:
+        nome = nome.lower()
+        if nome in TECLAS:
+            codigos.append(TECLAS[nome])
+        elif len(nome) == 1 and nome.isalnum():
+            codigos.append(ord(nome.upper()))
+        else:
+            raise ValueError(f"Tecla desconhecida: {nome}")
+    teclado = ctypes.windll.user32
+    SOLTAR, ESTENDIDA = 0x0002, 0x0001
+    estendida = lambda c: ESTENDIDA if (c >= 0xA6 or c in (0x5B, 0x2E)) else 0
+    for c in codigos:
+        teclado.keybd_event(c, 0, estendida(c), 0)
+        time.sleep(0.02)
+    for c in reversed(codigos):
+        teclado.keybd_event(c, 0, estendida(c) | SOLTAR, 0)
+        time.sleep(0.02)
+
+
 @app.post("/api/acoes/{aid}", dependencies=[Depends(exigir_token)])
 def executar_acao(aid: str):
     acao = CONFIG.get("acoes", {}).get(aid)
     if not acao:
         raise HTTPException(404, "Ação não cadastrada")
     try:
+        if "teclas" in acao:
+            apertar_teclas(acao["teclas"])
+            return {"ok": True, "codigo": 0, "saida": ""}
         r = subprocess.run(acao["comando"], capture_output=True, text=True, timeout=30)
         return {"ok": r.returncode == 0, "codigo": r.returncode, "saida": (r.stdout + r.stderr)[-500:]}
     except Exception as erro:

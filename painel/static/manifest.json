@@ -1,12 +1,22 @@
 {
-  "name": "Painel de Controle",
+  "name": "Painel — mantini.ia.br",
   "short_name": "Painel",
   "start_url": "/",
   "display": "standalone",
   "orientation": "landscape",
-  "background_color": "#0f1115",
-  "theme_color": "#0f1115",
+  "background_color": "#111318",
+  "theme_color": "#1a1d24",
   "icons": [
-    { "src": "/static/icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "/static/mantini-icone-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/mantini-icone.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
   ]
 }

@@ -12,20 +12,130 @@
   "acoes": {
     "bloquear_tela": {
       "nome": "🔒 Bloquear tela",
-      "comando": ["rundll32.exe", "user32.dll,LockWorkStation"]
+      "comando": [
+        "rundll32.exe",
+        "user32.dll,LockWorkStation"
+      ]
+    },
+    "volume_menos": {
+      "nome": "🔉 Volume −",
+      "teclas": [
+        "volume_menos"
+      ]
+    },
+    "volume_mais": {
+      "nome": "🔊 Volume +",
+      "teclas": [
+        "volume_mais"
+      ]
+    },
+    "volume_mudo": {
+      "nome": "🔇 Mudo",
+      "teclas": [
+        "volume_mudo"
+      ]
+    },
+    "anterior": {
+      "nome": "⏮️ Anterior",
+      "teclas": [
+        "anterior"
+      ]
+    },
+    "play_pausa": {
+      "nome": "⏯️ Play/Pausa",
+      "teclas": [
+        "play_pausa"
+      ]
+    },
+    "proxima": {
+      "nome": "⏭️ Próxima",
+      "teclas": [
+        "proxima"
+      ]
+    },
+    "mutar_mic": {
+      "nome": "🎙️ Mutar mic (chamada)",
+      "teclas": [
+        "win",
+        "alt",
+        "k"
+      ]
+    },
+    "print": {
+      "nome": "📸 Print da tela",
+      "teclas": [
+        "win",
+        "printscreen"
+      ]
+    },
+    "recortar": {
+      "nome": "✂️ Recortar tela",
+      "teclas": [
+        "win",
+        "shift",
+        "s"
+      ]
+    },
+    "area_de_trabalho": {
+      "nome": "🖥️ Mostrar área de trabalho",
+      "teclas": [
+        "win",
+        "d"
+      ]
+    },
+    "explorador": {
+      "nome": "📁 Explorador de arquivos",
+      "comando": [
+        "explorer.exe"
+      ]
+    },
+    "gerenciador": {
+      "nome": "📊 Gerenciador de tarefas",
+      "comando": [
+        "taskmgr.exe"
+      ]
     },
     "abrir_calculadora": {
-      "nome": "🧮 Abrir calculadora",
-      "comando": ["calc.exe"]
+      "nome": "🧮 Calculadora",
+      "comando": [
+        "calc.exe"
+      ]
+    },
+    "suspender": {
+      "nome": "😴 Suspender",
+      "comando": [
+        "rundll32.exe",
+        "powrprof.dll,SetSuspendState",
+        "0,1,0"
+      ],
+      "confirmar": true
+    },
+    "reiniciar": {
+      "nome": "🔄 Reiniciar em 60s",
+      "comando": [
+        "shutdown",
+        "/r",
+        "/t",
+        "60"
+      ],
+      "confirmar": true
     },
     "desligar": {
       "nome": "⏻ Desligar em 60s",
-      "comando": ["shutdown", "/s", "/t", "60"],
+      "comando": [
+        "shutdown",
+        "/s",
+        "/t",
+        "60"
+      ],
       "confirmar": true
     },
     "cancelar_desligar": {
-      "nome": "↩️ Cancelar desligamento",
-      "comando": ["shutdown", "/a"]
+      "nome": "↩️ Cancelar desligar/reiniciar",
+      "comando": [
+        "shutdown",
+        "/a"
+      ]
     }
   }
 }

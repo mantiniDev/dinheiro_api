@@ -3,127 +3,157 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#0b0d12">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1d24" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Painel</title>
+<title>painel — mantini.ia.br</title>
 <link rel="manifest" href="/static/manifest.json">
-<link rel="icon" href="/static/icone.svg">
+<link rel="icon" href="/static/mantini-icone.svg">
+<link rel="apple-touch-icon" href="/static/mantini-icone-512.png">
 <style>
-  /* Painel pensado para o celular DEITADO: tudo cabe na tela, sem rolar para baixo.
-     O que não couber vira outra tela — é só arrastar para o lado. */
+  /* Visual do mantini.ia.br (assets/base.css), adaptado para o celular DEITADO:
+     tudo cabe na tela, sem rolar. O que não couber vira outra tela — arraste para o lado. */
   :root {
-    --fundo: #0b0d12; --cartao: #151922; --borda: #222835; --texto: #e8eaf0; --fraco: #8b92a1;
-    --ok: #3fb950; --alerta: #d29922; --erro: #f85149;
-    --cpu: #4c8dff; --ram: #3fb950; --disco: #a371f7; --temp: #d29922; --desce: #39c5cf; --sobe: #db61a2;
-    --gap: clamp(6px, 2vh, 14px); --raio: clamp(8px, 2.2vh, 16px);
+    --bg: #f5f6f8; --card: #ffffff; --text: #1d2129; --muted: #6b7280; --line: #e5e7eb;
+    --accent: #2563eb; --accent-soft: #e8efff; --roxo: #7c3aed;
+    --ok: #16a34a; --warn: #d97706; --danger: #dc2626;
+    --ok-soft: #dcfce7; --ok-txt: #166534; --warn-soft: #fef3c7; --warn-txt: #92400e; --danger-soft: #fee2e2;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.04);
+    --cpu: var(--accent); --ram: var(--roxo); --disco: #0891b2; --temp: var(--warn); --desce: #0891b2; --sobe: #db2777;
+    --gap: clamp(6px, 2vh, 14px); --raio: 12px;
     --pad-x: max(var(--gap), env(safe-area-inset-left)); --pad-x2: max(var(--gap), env(safe-area-inset-right));
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111318; --card: #1a1d24; --text: #e6e8ec; --muted: #9aa1ad; --line: #2a2f39;
+      --accent: #6b9bff; --accent-soft: #1f2a44; --roxo: #a78bfa; --shadow: none;
+      --ok-soft: #12301a; --ok-txt: #4ade80; --warn-soft: #3a2f10; --warn-txt: #fbbf24; --danger-soft: #3a1517;
+      --disco: #22d3ee; --desce: #22d3ee; --sobe: #f472b6; }
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--fundo); color: var(--texto);
-    font: clamp(11px, 3.3vh, 18px)/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font: clamp(11px, 3.3vh, 17px)/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     -webkit-tap-highlight-color: transparent; user-select: none; }
-  button { font: inherit; cursor: pointer; border: 0; color: #fff; }
+  body { display: flex; flex-direction: column; height: 100dvh; }
+  button { font: inherit; cursor: pointer; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--text); }
   button:active { transform: scale(.97); }
+  button.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+  button.danger { color: var(--danger); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ---- Barra do topo (igual ao site) ---- */
+  .topbar { flex: none; display: flex; align-items: center; gap: clamp(6px, 2vh, 12px);
+    height: clamp(36px, 11vh, 54px); padding: 0 var(--pad-x2) 0 var(--pad-x);
+    background: var(--card); border-bottom: 1px solid var(--line); }
+  .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; }
+  .brand img { width: clamp(20px, 6.5vh, 28px); height: clamp(20px, 6.5vh, 28px); }
+  .brand .ia { color: var(--roxo); } .brand .tld { color: var(--muted); font-weight: 500; }
+  .sep { color: var(--muted); }
+  .tabs { display: flex; gap: 4px; overflow: hidden; }
+  .tabs button { padding: clamp(3px, 1vh, 6px) clamp(10px, 3vh, 16px); white-space: nowrap; font-size: .92em; }
+  .tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tabs .cont { display: inline-block; min-width: 1.4em; margin-left: 4px; padding: 0 5px; border-radius: 999px;
+    background: var(--warn); color: #fff; font-size: .8em; font-weight: 700; }
+  .spacer { flex: 1; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: .8em;
+    background: var(--accent-soft); color: var(--accent); white-space: nowrap; max-width: 30vw; overflow: hidden; text-overflow: ellipsis; }
+  .badge.on { background: var(--ok-soft); color: var(--ok-txt); }
+  .badge.pause { background: var(--warn-soft); color: var(--warn-txt); }
+  .badge.off { background: var(--danger-soft); color: var(--danger); }
+  .icone-bt { padding: 2px 8px; color: var(--muted); }
 
   /* ---- Telas lado a lado ---- */
-  #telas { display: flex; width: 100vw; height: 100dvh; overflow-x: auto; overflow-y: hidden;
+  #telas { flex: 1; min-height: 0; display: flex; width: 100vw; overflow-x: auto; overflow-y: hidden;
     scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior: contain; }
   #telas::-webkit-scrollbar { display: none; }
   .tela { flex: 0 0 100vw; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden;
-    padding: var(--gap) var(--pad-x2) calc(var(--gap) + 14px) var(--pad-x); display: grid; gap: var(--gap); min-height: 0; }
-  .c { background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio);
-    padding: clamp(6px, 2vh, 14px) clamp(8px, 2.4vh, 16px); min-height: 0; min-width: 0; overflow: hidden;
+    padding: var(--gap) var(--pad-x2) var(--gap) var(--pad-x); display: grid; gap: var(--gap); min-height: 0; }
+  .c { background: var(--card); border: 1px solid var(--line); border-radius: var(--raio); box-shadow: var(--shadow);
+    padding: clamp(6px, 2vh, 14px) clamp(8px, 2.6vh, 18px); min-height: 0; min-width: 0; overflow: hidden;
     display: flex; flex-direction: column; }
-  .rot { color: var(--fraco); font-size: .82em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .num { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rot { color: var(--muted); font-size: .78em; text-transform: uppercase; letter-spacing: .03em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub { color: var(--muted); font-size: .82em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .num { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  /* Indicador de telas (bolinhas) */
-  #pontos { position: fixed; left: 0; right: 0; bottom: 2px; height: 14px; display: flex; justify-content: center;
-    align-items: center; gap: 6px; pointer-events: none; font-size: 10px; color: var(--fraco); }
-  #pontos i { width: 6px; height: 6px; border-radius: 3px; background: #3a4150; transition: width .2s, background .2s; }
-  #pontos i.on { width: 16px; background: var(--texto); }
-  #pontos span { margin-left: 6px; }
-
-  /* ---- Tela 1: Geral ---- */
+  /* ---- Tela Geral ---- */
   #tGeral { grid-template-columns: 1fr 1.7fr 1fr; }
-  .relogio { font: 250 clamp(30px, 17vh, 120px)/1 system-ui, sans-serif; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
-  .data { color: var(--fraco); margin-top: .3vh; }
-  .pc { display: flex; align-items: center; gap: 6px; margin-top: 1vh; font-weight: 600; min-width: 0; }
-  .pc b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bola { width: .6em; height: .6em; border-radius: 50%; background: var(--fraco); flex: none; }
-  .bola.ok { background: var(--ok); box-shadow: 0 0 6px var(--ok); } .bola.erro { background: var(--erro); }
-  .pc .tela-cheia { margin-left: auto; background: none; color: var(--fraco); font-size: 1.1em; padding: 0 2px; }
-  .pedidoMini { margin-top: auto; border-radius: calc(var(--raio) * .8); padding: 1.6vh 1.8vh; background: #12161d; border: 1px solid var(--borda); }
-  .pedidoMini.tem { background: #2a210b; border-color: #6b4f12; animation: pulsa 2s infinite; }
-  @keyframes pulsa { 50% { border-color: #d29922; } }
+  .relogio { font: 300 clamp(28px, 15vh, 110px)/1 system-ui, sans-serif; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .data { color: var(--muted); margin-top: .4vh; }
+  .pedidoMini { margin-top: auto; border-radius: var(--raio); padding: 1.6vh 1.8vh; border: 1px dashed var(--line); }
+  .pedidoMini.tem { background: var(--warn-soft); border: 1px solid var(--warn); }
   .pedidoMini .t { font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: .4vh 0 1.2vh; }
   .bts { display: flex; gap: 1.2vh; }
-  .bts button { flex: 1; border-radius: calc(var(--raio) * .7); padding: 1.8vh 0; font-weight: 600; }
-  .sim { background: #238636; } .nao { background: #b62324; }
+  .bts button { flex: 1; padding: 1.6vh 0; font-weight: 600; }
 
   .meio { display: grid; grid-template-rows: auto 1fr; gap: var(--gap); min-height: 0; }
   .metricas { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); }
-  .metricas .c { padding-bottom: 1.4vh; }
-  .metricas .num { font-size: clamp(16px, 8vh, 44px); line-height: 1.1; }
-  .metricas .num small { font-size: .45em; color: var(--fraco); font-weight: 500; margin-left: 1px; }
-  .barra { height: max(3px, .9vh); background: var(--borda); border-radius: 9px; margin-top: auto; overflow: hidden; }
+  .metricas .num { font-size: clamp(16px, 7.5vh, 40px); line-height: 1.15; }
+  .metricas .num small { font-size: .45em; color: var(--muted); font-weight: 500; margin-left: 1px; }
+  .barra { height: max(3px, .9vh); background: var(--line); border-radius: 9px; margin-top: auto; overflow: hidden; }
   .barra i { display: block; height: 100%; width: 0; border-radius: 9px; transition: width .5s; }
-  .grafico { position: relative; }
   .grafico svg { flex: 1; width: 100%; min-height: 0; display: block; }
   .legenda { display: flex; gap: 1.6vh; align-items: center; }
   .legenda span { display: flex; align-items: center; gap: 4px; }
   .legenda i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
 
-  .lado .linha { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: .5vh 0; }
+  .lado .linha { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: .4vh 0; }
   .lado .grande { font-size: clamp(14px, 5.6vh, 30px); }
-  .procs { flex: 1; min-height: 0; overflow: hidden; margin-top: .8vh; border-top: 1px solid var(--borda); padding-top: .6vh; }
-  .procs div { display: flex; justify-content: space-between; gap: 6px; padding: .25vh 0; font-size: .9em; }
+  .procs { flex: 1; min-height: 0; overflow: hidden; margin-top: .6vh; border-top: 1px solid var(--line); padding-top: .4vh; }
+  .procs div { display: flex; justify-content: space-between; gap: 6px; padding: .3vh 0; font-size: .88em; border-bottom: 1px solid var(--line); }
   .procs div span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .procs div span:last-child { color: var(--fraco); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .procs div span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  /* ---- Telas de ações (grade de botões) ---- */
+  /* ---- Ações ---- */
   .grade { display: grid; gap: var(--gap); height: 100%; min-height: 0; }
-  .acao { background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6vh;
-    font-weight: 600; text-align: center; padding: 1vh; min-height: 0; overflow: hidden; }
-  .acao .ic { font-size: clamp(18px, 9vh, 48px); line-height: 1; }
-  .acao.perigo { background: #3a1517; border-color: #6e1b1b; }
+  .acao { border-radius: var(--raio); box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: .8vh; font-weight: 600; text-align: center; padding: 1vh; min-height: 0; overflow: hidden; }
+  .acao:hover { border-color: var(--accent); }
+  .acao .ic { font-size: clamp(18px, 8.5vh, 44px); line-height: 1; }
+  .acao.perigo { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); }
+  .acao.feito { border-color: var(--ok); background: var(--ok-soft); }
 
-  /* ---- Tela de histórico ---- */
+  /* ---- Histórico ---- */
   #tHist { grid-template-rows: repeat(3, 1fr); }
   #tHist .c { flex-direction: row; gap: 2vh; align-items: stretch; }
-  #tHist .info { width: 22%; display: flex; flex-direction: column; justify-content: center; }
-  #tHist .info .num { font-size: clamp(14px, 7vh, 40px); }
+  #tHist .info { width: 20%; display: flex; flex-direction: column; justify-content: center; }
+  #tHist .info .num { font-size: clamp(14px, 6.5vh, 36px); }
   #tHist svg { flex: 1; min-width: 0; height: 100%; }
 
-  /* ---- Telas de pedidos ---- */
+  /* ---- Pedidos ---- */
   .pedido { gap: .6vh; }
   .pedido .bts { margin-top: auto; }
   .pedido .topo { display: flex; justify-content: space-between; gap: 8px; }
   .pedido .titulo { font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .estado { font-size: .75em; padding: 2px 8px; border-radius: 99px; white-space: nowrap; align-self: flex-start; }
-  .estado.pendente { background: #3a2f10; color: var(--alerta); }
-  .estado.aprovado { background: #12301a; color: var(--ok); }
-  .estado.negado { background: #3a1517; color: var(--erro); }
-  .vazio { display: flex; align-items: center; justify-content: center; color: var(--fraco); height: 100%; grid-column: 1 / -1; grid-row: 1 / -1; }
+  .pedido .badge { align-self: flex-start; }
+  .vazio { display: flex; align-items: center; justify-content: center; color: var(--muted); height: 100%; grid-column: 1 / -1; grid-row: 1 / -1; }
 
   /* ---- Avisos, login, girar ---- */
-  #aviso { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: #222733; border: 1px solid var(--borda);
-    padding: 1.6vh 2.4vh; border-radius: 12px; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
+  #aviso { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); background: var(--text); color: var(--bg);
+    padding: 1.4vh 2.4vh; border-radius: 999px; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
   #aviso.ver { opacity: 1; }
-  .sobre { position: fixed; inset: 0; background: var(--fundo); display: none; align-items: center; justify-content: center;
+  .sobre { position: fixed; inset: 0; background: var(--bg); display: none; align-items: center; justify-content: center;
     padding: 20px; z-index: 10; text-align: center; }
-  .sobre > div { max-width: 520px; width: 100%; }
-  #login input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borda); background: var(--cartao);
-    color: var(--texto); font: 16px system-ui; margin: 10px 0 4px; user-select: text; }
-  #login button, #girar button { padding: 12px 18px; border-radius: 10px; font-weight: 600; margin: 6px 4px 0; }
-  #girar { flex-direction: column; gap: 10px; }
-  #girar .ic { font-size: 56px; animation: gira 2s ease-in-out infinite; }
+  .sobre > .c { max-width: 520px; width: 100%; padding: 20px; display: block; }
+  #login input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg);
+    color: var(--text); font: 16px system-ui; margin: 10px 0 4px; user-select: text; }
+  #login input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .sobre button { padding: 10px 18px; font-weight: 600; margin: 6px 4px 0; }
+  #girar .ic { font-size: 52px; display: inline-block; animation: gira 2s ease-in-out infinite; }
   @keyframes gira { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
   @media (orientation: portrait) { body:not(.retrato-ok) #girar { display: flex; } }
 </style>
 </head>
 <body>
+
+<header class="topbar">
+  <span class="brand"><img src="/static/mantini-icone.svg" alt=""><span>mantini<span class="ia">.ia</span><span class="tld">.br</span></span></span>
+  <span class="sep">/</span>
+  <nav class="tabs" id="abas"></nav>
+  <span class="spacer"></span>
+  <span class="badge" id="status">conectando…</span>
+  <button class="icone-bt" onclick="telaCheia()" title="Tela cheia">⛶</button>
+</header>
 
 <div id="telas">
   <!-- Tela 1: visão geral -->
@@ -131,18 +161,16 @@
     <div class="c">
       <div class="relogio" id="hora">--:--</div>
       <div class="data" id="data"></div>
-      <div class="pc"><span class="bola" id="bola"></span><b id="nomePc">conectando…</b>
-        <button class="tela-cheia" onclick="telaCheia()" title="Tela cheia">⛶</button></div>
-      <div class="rot" id="sistema"></div>
+      <div class="sub" id="sistema" style="margin-top:.8vh"></div>
       <div class="pedidoMini" id="pedidoMini"></div>
     </div>
 
     <div class="meio">
       <div class="metricas">
-        <div class="c"><div class="rot">CPU</div><div class="num" id="cpu">–</div><div class="rot" id="cpuSub"></div><div class="barra"><i id="cpuB" style="background:var(--cpu)"></i></div></div>
-        <div class="c"><div class="rot">RAM</div><div class="num" id="ram">–</div><div class="rot" id="ramSub"></div><div class="barra"><i id="ramB" style="background:var(--ram)"></i></div></div>
-        <div class="c"><div class="rot">Disco</div><div class="num" id="disco">–</div><div class="rot" id="discoSub"></div><div class="barra"><i id="discoB" style="background:var(--disco)"></i></div></div>
-        <div class="c"><div class="rot" id="extraRot">Temp.</div><div class="num" id="extra">–</div><div class="rot" id="extraSub"></div><div class="barra"><i id="extraB" style="background:var(--temp)"></i></div></div>
+        <div class="c"><div class="rot">CPU</div><div class="num" id="cpu">–</div><div class="sub" id="cpuSub"></div><div class="barra"><i id="cpuB" style="background:var(--cpu)"></i></div></div>
+        <div class="c"><div class="rot">RAM</div><div class="num" id="ram">–</div><div class="sub" id="ramSub"></div><div class="barra"><i id="ramB" style="background:var(--ram)"></i></div></div>
+        <div class="c"><div class="rot">Disco</div><div class="num" id="disco">–</div><div class="sub" id="discoSub"></div><div class="barra"><i id="discoB" style="background:var(--disco)"></i></div></div>
+        <div class="c"><div class="rot" id="extraRot">Temp.</div><div class="num" id="extra">–</div><div class="sub" id="extraSub"></div><div class="barra"><i id="extraB" style="background:var(--temp)"></i></div></div>
       </div>
       <div class="c grafico">
         <div class="legenda rot"><span><i style="background:var(--cpu)"></i>CPU</span><span><i style="background:var(--ram)"></i>RAM</span><span style="margin-left:auto" id="janela">últimos 5 min</span></div>
@@ -155,7 +183,7 @@
       <div class="linha"><span class="num grande" id="desce" style="color:var(--desce)">↓ –</span></div>
       <div class="linha"><span class="num" id="sobe" style="color:var(--sobe)">↑ –</span></div>
       <div class="linha" id="linhaUptime"><span class="rot">Ligado há</span><span class="num" id="uptime">–</span></div>
-      <div class="rot" style="margin-top:.6vh">Processos (RAM)</div>
+      <div class="rot" style="margin-top:.8vh">Processos · RAM</div>
       <div class="procs" id="procs"></div>
     </div>
   </section>
@@ -165,32 +193,31 @@
 
   <!-- Histórico -->
   <section class="tela" id="tHist" data-nome="Histórico">
-    <div class="c"><div class="info"><span class="rot">CPU</span><span class="num" id="hCpu" style="color:var(--cpu)">–</span><span class="rot" id="hCpuMax"></span></div><svg id="gCpu" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
-    <div class="c"><div class="info"><span class="rot">RAM</span><span class="num" id="hRam" style="color:var(--ram)">–</span><span class="rot" id="hRamMax"></span></div><svg id="gRam" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
-    <div class="c"><div class="info"><span class="rot">Rede</span><span class="num" id="hRede" style="color:var(--desce)">–</span><span class="rot" id="hRedeSub"></span></div><svg id="gRede" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
+    <div class="c"><div class="info"><span class="rot">CPU</span><span class="num" id="hCpu" style="color:var(--cpu)">–</span><span class="sub" id="hCpuMax"></span></div><svg id="gCpu" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
+    <div class="c"><div class="info"><span class="rot">RAM</span><span class="num" id="hRam" style="color:var(--ram)">–</span><span class="sub" id="hRamMax"></span></div><svg id="gRam" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
+    <div class="c"><div class="info"><span class="rot">Rede</span><span class="num" id="hRede" style="color:var(--desce)">–</span><span class="sub" id="hRedeSub"></span></div><svg id="gRede" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
   </section>
 
   <!-- Telas de pedidos são criadas aqui -->
   <div id="marcaPedidos" hidden></div>
 </div>
 
-<nav id="pontos"></nav>
 <div id="aviso"></div>
 
-<section id="login" class="sobre"><div>
+<section id="login" class="sobre"><div class="c">
   <div>No PC, abra <b>http://localhost:8765/qr</b> e aponte a câmera do celular para o QR code.</div>
-  <div style="margin-top:10px;color:var(--fraco)">Ou cole aqui o token (ou o link inteiro):</div>
+  <div class="sub" style="margin-top:10px;white-space:normal">Ou cole aqui o token (ou o link inteiro):</div>
   <input id="campoToken" placeholder="token" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-  <div id="erroToken" style="color:var(--erro);font-size:14px;min-height:20px"></div>
-  <button class="sim" id="botaoEntrar" onclick="salvarToken()">Entrar</button>
+  <div id="erroToken" style="color:var(--danger);font-size:14px;min-height:20px"></div>
+  <button class="primary" id="botaoEntrar" onclick="salvarToken()">Entrar</button>
 </div></section>
 
-<section id="girar" class="sobre"><div>
+<section id="girar" class="sobre"><div class="c">
   <div class="ic">📱</div>
   <div style="font-size:18px;font-weight:600">Deite o celular</div>
-  <div style="color:var(--fraco);margin:6px 0 10px">O painel foi feito para a tela na horizontal.</div>
-  <button class="sim" onclick="telaCheia()">Tela cheia deitada</button>
-  <button style="background:var(--borda)" onclick="document.body.classList.add('retrato-ok')">Usar assim</button>
+  <div class="sub" style="margin:6px 0 10px;white-space:normal">O painel foi feito para a tela na horizontal.</div>
+  <button class="primary" onclick="telaCheia()">Tela cheia deitada</button>
+  <button onclick="document.body.classList.add('retrato-ok')">Usar assim</button>
 </div></section>
 
 <script>
@@ -235,7 +262,7 @@
   function aviso(t) { const el = $("aviso"); el.textContent = t; el.classList.add("ver"); clearTimeout(aviso.t); aviso.t = setTimeout(() => el.classList.remove("ver"), 2500); }
   function duracao(s) { const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}min`; }
   function vel(kbs) { return kbs >= 1024 ? (kbs / 1024).toFixed(1) + " MB/s" : Math.round(kbs) + " KB/s"; }
-  function corPct(p) { return p >= 90 ? "var(--erro)" : p >= 75 ? "var(--alerta)" : null; }
+  function corPct(p) { return p >= 90 ? "var(--danger)" : p >= 75 ? "var(--warn)" : null; }
   function barra(id, pct, corBase) { const el = $(id); el.style.width = Math.min(pct, 100) + "%"; el.style.background = corPct(pct) || corBase; }
 
   async function telaCheia() {
@@ -258,12 +285,12 @@
   function guardar(k, v) { hist[k].push(v); if (hist[k].length > MAX_PONTOS) hist[k].shift(); }
 
   function desenhar(svg, series, max) {
-    const linhas = [25, 50, 75].map((y) => `<line x1="0" x2="100" y1="${y}" y2="${y}" stroke="#222835" stroke-width="1" vector-effect="non-scaling-stroke"/>`);
+    const linhas = [25, 50, 75].map((y) => `<line x1="0" x2="100" y1="${y}" y2="${y}" stroke="${css("--line")}" stroke-width="1" vector-effect="non-scaling-stroke"/>`);
     for (const { dados, cor, area } of series) {
       if (dados.length < 2) continue;
       const passo = 100 / (MAX_PONTOS - 1), ini = 100 - (dados.length - 1) * passo;
       const pts = dados.map((v, i) => `${(ini + i * passo).toFixed(2)},${(100 - Math.min(v / max, 1) * 97).toFixed(2)}`).join(" ");
-      if (area) linhas.push(`<polygon points="${ini},100 ${pts} 100,100" fill="${cor}" opacity=".12"/>`);
+      if (area) linhas.push(`<polygon points="${ini},100 ${pts} 100,100" fill="${cor}" opacity=".14"/>`);
       linhas.push(`<polyline points="${pts}" fill="none" stroke="${cor}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`);
     }
     svg.innerHTML = linhas.join("");
@@ -292,7 +319,7 @@
 
   function criarTelas(prefixo, nome, marca, itens, minL, minA, render, vazio) {
     document.querySelectorAll(`.tela[data-grupo="${prefixo}"]`).forEach((t) => t.remove());
-    const larg = innerWidth - 2 * 12, alt = innerHeight - 12 - 26;
+    const larg = innerWidth - 2 * 12, alt = telasEl.clientHeight - 2 * 12;
     const g = grade(itens.length || 1, larg, alt, minL, minA);
     const total = Math.max(1, Math.ceil(itens.length / g.porTela));
     const porTela = Math.ceil(itens.length / total) || 1;  // divide por igual entre as telas
@@ -322,6 +349,7 @@
       const [ic, txt] = iconeDe(a.nome);
       const b = document.createElement("button");
       b.className = "acao" + (a.confirmar ? " perigo" : "");
+      b.dataset.id = a.id;
       b.innerHTML = `<span class="ic">${esc(ic)}</span><span>${esc(txt)}</span>`;
       b.onclick = () => executar(a.id, a.confirmar, a.nome);
       return b;
@@ -331,7 +359,9 @@
   async function executar(id, confirmar, nome) {
     if (confirmar && !confirm(`Executar "${nome}"?`)) return;
     const r = await api(`/api/acoes/${id}`, "POST");
-    aviso(r.ok ? `${nome}: feito ✓` : `${nome}: erro (${r.codigo})`);
+    aviso(r.ok ? `${nome}: feito ✓` : `${nome}: erro — ${r.saida || r.codigo}`);
+    const b = document.querySelector(`.acao[data-id="${id}"]`);
+    if (b && r.ok) { b.classList.add("feito"); setTimeout(() => b.classList.remove("feito"), 600); }
   }
 
   // ---------------- pedidos ----------------
@@ -340,9 +370,9 @@
     criarTelas("pedidos", "Pedidos", $("marcaPedidos"), pedidos, 260, 120, (p) => {
       const d = document.createElement("div");
       d.className = "c pedido";
-      d.innerHTML = `<div class="topo"><div class="titulo">${esc(p.titulo)}</div><span class="estado ${p.estado}">${p.estado}</span></div>
-        <div class="rot">${esc(p.detalhe || p.origem)} · ${hhmm(p.criado_em)}</div>
-        ${p.estado === "pendente" ? `<div class="bts"><button class="sim" data-a="aprovar">✅ Liberar</button><button class="nao" data-a="negar">❌ Negar</button></div>` : ""}`;
+      d.innerHTML = `<div class="topo"><div class="titulo">${esc(p.titulo)}</div><span class="badge ${{pendente: "pause", aprovado: "on", negado: "off"}[p.estado]}">${p.estado}</span></div>
+        <div class="sub">${esc(p.detalhe || p.origem)} · ${hhmm(p.criado_em)}</div>
+        ${p.estado === "pendente" ? `<div class="bts"><button class="ok" data-a="aprovar">✅ Liberar</button><button class="danger" data-a="negar">❌ Negar</button></div>` : ""}`;
       d.querySelectorAll("button").forEach((b) => (b.onclick = () => decidir(p.id, b.dataset.a)));
       return d;
     }, "Nenhum pedido ainda");
@@ -351,11 +381,11 @@
   function mostrarPedidoMini() {
     const el = $("pedidoMini"), pend = pedidos.filter((p) => p.estado === "pendente");
     el.classList.toggle("tem", pend.length > 0);
-    if (!pend.length) { el.innerHTML = `<div class="rot">🔐 Nenhum pedido pendente</div>`; return; }
+    if (!pend.length) { el.innerHTML = `<div class="sub">🔐 Nenhum pedido pendente</div>`; return; }
     const p = pend[0];
-    el.innerHTML = `<div class="rot" style="color:var(--alerta)">🔐 Pedido · ${hhmm(p.criado_em)}${pend.length > 1 ? ` · +${pend.length - 1} (arraste ⟶)` : ""}</div>
+    el.innerHTML = `<div class="rot" style="color:var(--warn-txt)">🔐 Pedido · ${hhmm(p.criado_em)}${pend.length > 1 ? ` · +${pend.length - 1} em Pedidos` : ""}</div>
       <div class="t">${esc(p.titulo)}</div>
-      <div class="bts"><button class="sim" data-a="aprovar">Liberar</button><button class="nao" data-a="negar">Negar</button></div>`;
+      <div class="bts"><button class="ok" data-a="aprovar">Liberar</button><button class="danger" data-a="negar">Negar</button></div>`;
     el.querySelectorAll("button").forEach((b) => (b.onclick = () => decidir(p.id, b.dataset.a)));
   }
   async function decidir(id, acao) {
@@ -368,16 +398,16 @@
     const pend = new Set(pedidos.filter((p) => p.estado === "pendente").map((p) => p.id));
     for (const id of pend) if (!pendentesAntes.has(id) && navigator.vibrate) navigator.vibrate([200, 100, 200]);
     pendentesAntes = pend;
-    mostrarPedidoMini();
+    mostrarPedidoMini(); refazerPontos();
     const ass = pedidos.map((p) => p.id + p.estado).join();
     if (ass !== assinaturaPedidos) { assinaturaPedidos = ass; manterTela(montarPedidos); }
   }
 
   // ---------------- status do PC ----------------
-  let ultimoStatus = null;
+  let ultimoStatus = null, nomePc = "PC";
   async function atualizarStatus() {
     const s = ultimoStatus = await api("/api/status");
-    $("nomePc").textContent = s.nome_pc; $("sistema").textContent = s.sistema;
+    nomePc = s.nome_pc; $("sistema").textContent = `${s.nome_pc} · ${s.sistema}`;
     $("cpu").innerHTML = `${Math.round(s.cpu_pct)}<small>%</small>`; $("cpuSub").textContent = `${s.cpu_nucleos} núcleos`; barra("cpuB", s.cpu_pct, "var(--cpu)");
     $("ram").innerHTML = `${Math.round(s.ram.pct)}<small>%</small>`; $("ramSub").textContent = `${s.ram.usado_gb}/${s.ram.total_gb} GB`; barra("ramB", s.ram.pct, "var(--ram)");
     if (s.disco) { $("disco").innerHTML = `${Math.round(s.disco.pct)}<small>%</small>`; $("discoSub").textContent = `${Math.round(s.disco.usado_gb)}/${Math.round(s.disco.total_gb)} GB`; barra("discoB", s.disco.pct, "var(--disco)"); }
@@ -404,9 +434,20 @@
   const telasEl = $("telas");
   const telas = () => [...telasEl.querySelectorAll(".tela")];
   const telaAtual = () => Math.round(telasEl.scrollLeft / telasEl.clientWidth);
+  // Abas no topo: uma por grupo (Geral, Ações, Histórico, Pedidos). Grupos com várias telas mostram 1/2, 2/2...
+  function grupoDe(t) { return t.dataset.grupo || t.id; }
   function refazerPontos() {
-    const n = telas().length, a = Math.min(telaAtual(), n - 1);
-    $("pontos").innerHTML = telas().map((_, i) => `<i class="${i === a ? "on" : ""}"></i>`).join("") + `<span>${esc(telas()[a]?.dataset.nome || "")}</span>`;
+    const ts = telas(), a = ts[Math.min(telaAtual(), ts.length - 1)];
+    const grupos = [];
+    ts.forEach((t, i) => { const g = grupoDe(t); if (!grupos.length || grupos.at(-1).g !== g) grupos.push({ g, i, n: 0, nome: t.dataset.nome.replace(/ \d+\/\d+$/, "") }); grupos.at(-1).n++; });
+    const pend = pedidos.filter((p) => p.estado === "pendente").length;
+    $("abas").innerHTML = grupos.map((gr) => {
+      const ativo = a && grupoDe(a) === gr.g;
+      const parte = ativo && gr.n > 1 ? ` ${ts.indexOf(a) - gr.i + 1}/${gr.n}` : "";
+      const cont = gr.g === "pedidos" && pend ? `<span class="cont">${pend}</span>` : "";
+      return `<button class="${ativo ? "active" : ""}" data-i="${gr.i}">${esc(gr.nome)}${parte}${cont}</button>`;
+    }).join("");
+    $("abas").querySelectorAll("button").forEach((b) => (b.onclick = () => telasEl.scrollTo({ left: b.dataset.i * telasEl.clientWidth, behavior: "smooth" })));
   }
   telasEl.addEventListener("scroll", () => { clearTimeout(refazerPontos.t); refazerPontos.t = setTimeout(refazerPontos, 60); }, { passive: true });
   // Recria telas sem "pular" da tela em que a pessoa está
@@ -426,10 +467,9 @@
     try {
       await Promise.all([atualizarStatus(), atualizarPedidos()]);
       if (!acoes) { acoes = await api("/api/acoes"); manterTela(montarAcoes); }
-      $("bola").className = "bola ok";
+      $("status").className = "badge on"; $("status").textContent = "● " + nomePc;
     } catch (e) {
-      $("bola").className = "bola erro";
-      if (!ultimoStatus) $("nomePc").textContent = "sem conexão";
+      $("status").className = "badge off"; $("status").textContent = "● sem conexão";
     }
   }
   montarPedidos(); refazerPontos();
