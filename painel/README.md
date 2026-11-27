@@ -8,7 +8,11 @@ Transforma o celular (ex.: Redmi Note 10S) num painel que:
 - **executa ações** cadastradas por você (bloquear tela, desligar etc.);
 - **avisa** quando CPU, RAM ou disco passam do limite.
 
-<img src="print_celular.png" width="300">
+Feito para o celular **deitado**: tudo cabe na tela, sem rolar. O que não couber vira outra tela,
+e você troca **arrastando para o lado** (Geral → Ações → Histórico → Pedidos).
+
+<img src="print_celular.png" width="600">
+<img src="print_acoes.png" width="600">
 
 ## 1. No PC
 

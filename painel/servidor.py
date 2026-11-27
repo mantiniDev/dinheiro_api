@@ -158,7 +158,7 @@ def coletar_status() -> dict:
         "rede": {"subida_kbs": round(subida / 1024, 1), "descida_kbs": round(descida / 1024, 1)},
         "bateria": bateria,
         "temperatura_c": temperatura,
-        "top_processos": [{"nome": n, "ram_mb": round(r / 1e6)} for r, n in processos[:5]],
+        "top_processos": [{"nome": n, "ram_mb": round(r / 1e6)} for r, n in processos[:15]],
     }
 
 

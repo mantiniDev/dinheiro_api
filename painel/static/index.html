@@ -2,140 +2,224 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f1115">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b0d12">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Painel</title>
 <link rel="manifest" href="/static/manifest.json">
 <link rel="icon" href="/static/icone.svg">
 <style>
+  /* Painel pensado para o celular DEITADO: tudo cabe na tela, sem rolar para baixo.
+     O que não couber vira outra tela — é só arrastar para o lado. */
   :root {
-    --fundo: #0f1115; --cartao: #181b22; --borda: #262a33; --texto: #e7e9ee;
-    --fraco: #8b92a1; --ok: #3fb950; --alerta: #d29922; --erro: #f85149; --azul: #4c8dff;
+    --fundo: #0b0d12; --cartao: #151922; --borda: #222835; --texto: #e8eaf0; --fraco: #8b92a1;
+    --ok: #3fb950; --alerta: #d29922; --erro: #f85149;
+    --cpu: #4c8dff; --ram: #3fb950; --disco: #a371f7; --temp: #d29922; --desce: #39c5cf; --sobe: #db61a2;
+    --gap: clamp(6px, 2vh, 14px); --raio: clamp(8px, 2.2vh, 16px);
+    --pad-x: max(var(--gap), env(safe-area-inset-left)); --pad-x2: max(var(--gap), env(safe-area-inset-right));
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--fundo); color: var(--texto);
-    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    padding: max(12px, env(safe-area-inset-top)) 12px 24px;
-  }
-  header { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 4px 12px; }
-  header h1 { font-size: 20px; margin: 0; }
-  #conexao { font-size: 13px; color: var(--fraco); }
-  #conexao.ok::before { content: "● "; color: var(--ok); }
-  #conexao.erro::before { content: "● "; color: var(--erro); }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--fraco); margin: 20px 4px 8px; }
-  .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: 14px; padding: 12px 14px; }
-  .rotulo { color: var(--fraco); font-size: 13px; }
-  .valor { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
-  .sub { color: var(--fraco); font-size: 12px; font-variant-numeric: tabular-nums; }
-  .barra { height: 6px; background: var(--borda); border-radius: 3px; margin-top: 8px; overflow: hidden; }
-  .barra > i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .4s; }
-  .barra > i.alto { background: var(--alerta); } .barra > i.critico { background: var(--erro); }
-  .lista { display: flex; flex-direction: column; gap: 8px; }
-  .pedido { display: flex; flex-direction: column; gap: 8px; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--fundo); color: var(--texto);
+    font: clamp(11px, 3.3vh, 18px)/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent; user-select: none; }
+  button { font: inherit; cursor: pointer; border: 0; color: #fff; }
+  button:active { transform: scale(.97); }
+
+  /* ---- Telas lado a lado ---- */
+  #telas { display: flex; width: 100vw; height: 100dvh; overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior: contain; }
+  #telas::-webkit-scrollbar { display: none; }
+  .tela { flex: 0 0 100vw; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden;
+    padding: var(--gap) var(--pad-x2) calc(var(--gap) + 14px) var(--pad-x); display: grid; gap: var(--gap); min-height: 0; }
+  .c { background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio);
+    padding: clamp(6px, 2vh, 14px) clamp(8px, 2.4vh, 16px); min-height: 0; min-width: 0; overflow: hidden;
+    display: flex; flex-direction: column; }
+  .rot { color: var(--fraco); font-size: .82em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .num { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* Indicador de telas (bolinhas) */
+  #pontos { position: fixed; left: 0; right: 0; bottom: 2px; height: 14px; display: flex; justify-content: center;
+    align-items: center; gap: 6px; pointer-events: none; font-size: 10px; color: var(--fraco); }
+  #pontos i { width: 6px; height: 6px; border-radius: 3px; background: #3a4150; transition: width .2s, background .2s; }
+  #pontos i.on { width: 16px; background: var(--texto); }
+  #pontos span { margin-left: 6px; }
+
+  /* ---- Tela 1: Geral ---- */
+  #tGeral { grid-template-columns: 1fr 1.7fr 1fr; }
+  .relogio { font: 250 clamp(30px, 17vh, 120px)/1 system-ui, sans-serif; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .data { color: var(--fraco); margin-top: .3vh; }
+  .pc { display: flex; align-items: center; gap: 6px; margin-top: 1vh; font-weight: 600; min-width: 0; }
+  .pc b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bola { width: .6em; height: .6em; border-radius: 50%; background: var(--fraco); flex: none; }
+  .bola.ok { background: var(--ok); box-shadow: 0 0 6px var(--ok); } .bola.erro { background: var(--erro); }
+  .pc .tela-cheia { margin-left: auto; background: none; color: var(--fraco); font-size: 1.1em; padding: 0 2px; }
+  .pedidoMini { margin-top: auto; border-radius: calc(var(--raio) * .8); padding: 1.6vh 1.8vh; background: #12161d; border: 1px solid var(--borda); }
+  .pedidoMini.tem { background: #2a210b; border-color: #6b4f12; animation: pulsa 2s infinite; }
+  @keyframes pulsa { 50% { border-color: #d29922; } }
+  .pedidoMini .t { font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: .4vh 0 1.2vh; }
+  .bts { display: flex; gap: 1.2vh; }
+  .bts button { flex: 1; border-radius: calc(var(--raio) * .7); padding: 1.8vh 0; font-weight: 600; }
+  .sim { background: #238636; } .nao { background: #b62324; }
+
+  .meio { display: grid; grid-template-rows: auto 1fr; gap: var(--gap); min-height: 0; }
+  .metricas { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); }
+  .metricas .c { padding-bottom: 1.4vh; }
+  .metricas .num { font-size: clamp(16px, 8vh, 44px); line-height: 1.1; }
+  .metricas .num small { font-size: .45em; color: var(--fraco); font-weight: 500; margin-left: 1px; }
+  .barra { height: max(3px, .9vh); background: var(--borda); border-radius: 9px; margin-top: auto; overflow: hidden; }
+  .barra i { display: block; height: 100%; width: 0; border-radius: 9px; transition: width .5s; }
+  .grafico { position: relative; }
+  .grafico svg { flex: 1; width: 100%; min-height: 0; display: block; }
+  .legenda { display: flex; gap: 1.6vh; align-items: center; }
+  .legenda span { display: flex; align-items: center; gap: 4px; }
+  .legenda i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+
+  .lado .linha { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: .5vh 0; }
+  .lado .grande { font-size: clamp(14px, 5.6vh, 30px); }
+  .procs { flex: 1; min-height: 0; overflow: hidden; margin-top: .8vh; border-top: 1px solid var(--borda); padding-top: .6vh; }
+  .procs div { display: flex; justify-content: space-between; gap: 6px; padding: .25vh 0; font-size: .9em; }
+  .procs div span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .procs div span:last-child { color: var(--fraco); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---- Telas de ações (grade de botões) ---- */
+  .grade { display: grid; gap: var(--gap); height: 100%; min-height: 0; }
+  .acao { background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6vh;
+    font-weight: 600; text-align: center; padding: 1vh; min-height: 0; overflow: hidden; }
+  .acao .ic { font-size: clamp(18px, 9vh, 48px); line-height: 1; }
+  .acao.perigo { background: #3a1517; border-color: #6e1b1b; }
+
+  /* ---- Tela de histórico ---- */
+  #tHist { grid-template-rows: repeat(3, 1fr); }
+  #tHist .c { flex-direction: row; gap: 2vh; align-items: stretch; }
+  #tHist .info { width: 22%; display: flex; flex-direction: column; justify-content: center; }
+  #tHist .info .num { font-size: clamp(14px, 7vh, 40px); }
+  #tHist svg { flex: 1; min-width: 0; height: 100%; }
+
+  /* ---- Telas de pedidos ---- */
+  .pedido { gap: .6vh; }
+  .pedido .bts { margin-top: auto; }
   .pedido .topo { display: flex; justify-content: space-between; gap: 8px; }
-  .pedido .titulo { font-weight: 600; }
-  .estado { font-size: 12px; padding: 2px 8px; border-radius: 99px; white-space: nowrap; align-self: flex-start; }
+  .pedido .titulo { font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .estado { font-size: .75em; padding: 2px 8px; border-radius: 99px; white-space: nowrap; align-self: flex-start; }
   .estado.pendente { background: #3a2f10; color: var(--alerta); }
   .estado.aprovado { background: #12301a; color: var(--ok); }
   .estado.negado { background: #3a1517; color: var(--erro); }
-  .botoes { display: flex; gap: 8px; }
-  button {
-    flex: 1; border: 0; border-radius: 10px; padding: 12px; font: inherit; font-weight: 600;
-    color: #fff; background: var(--borda); cursor: pointer;
-  }
-  button:active { transform: scale(.98); }
-  button.aprovar { background: #238636; } button.negar { background: #b62324; }
-  .acoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .acoes button { background: var(--cartao); border: 1px solid var(--borda); padding: 16px 12px; }
-  .vazio { color: var(--fraco); text-align: center; padding: 16px; }
-  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-  td { padding: 4px 0; } td:last-child { text-align: right; color: var(--fraco); }
-  #aviso { position: fixed; left: 12px; right: 12px; bottom: 16px; background: #222733; border: 1px solid var(--borda);
-    padding: 12px 14px; border-radius: 12px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .vazio { display: flex; align-items: center; justify-content: center; color: var(--fraco); height: 100%; grid-column: 1 / -1; grid-row: 1 / -1; }
+
+  /* ---- Avisos, login, girar ---- */
+  #aviso { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: #222733; border: 1px solid var(--borda);
+    padding: 1.6vh 2.4vh; border-radius: 12px; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
   #aviso.ver { opacity: 1; }
-  #login { display: none; }
-  #login input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); font: inherit; margin: 8px 0; }
+  .sobre { position: fixed; inset: 0; background: var(--fundo); display: none; align-items: center; justify-content: center;
+    padding: 20px; z-index: 10; text-align: center; }
+  .sobre > div { max-width: 520px; width: 100%; }
+  #login input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borda); background: var(--cartao);
+    color: var(--texto); font: 16px system-ui; margin: 10px 0 4px; user-select: text; }
+  #login button, #girar button { padding: 12px 18px; border-radius: 10px; font-weight: 600; margin: 6px 4px 0; }
+  #girar { flex-direction: column; gap: 10px; }
+  #girar .ic { font-size: 56px; animation: gira 2s ease-in-out infinite; }
+  @keyframes gira { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+  @media (orientation: portrait) { body:not(.retrato-ok) #girar { display: flex; } }
 </style>
 </head>
 <body>
-<header>
-  <h1 id="nomePc">Painel</h1>
-  <span id="conexao">conectando…</span>
-</header>
 
-<section id="login" class="cartao">
-  <div>Mais fácil: no PC, abra <b>http://localhost:8765/qr</b> e aponte a câmera do celular para o QR code.</div>
-  <div style="margin-top:12px">Ou cole aqui o token (ou o link inteiro) mostrado no terminal do PC:</div>
-  <input id="campoToken" placeholder="token" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-  <div id="erroToken" style="color:var(--erro);font-size:14px;min-height:20px"></div>
-  <button class="aprovar" id="botaoEntrar" onclick="salvarToken()">Entrar</button>
-</section>
+<div id="telas">
+  <!-- Tela 1: visão geral -->
+  <section class="tela" id="tGeral" data-nome="Geral">
+    <div class="c">
+      <div class="relogio" id="hora">--:--</div>
+      <div class="data" id="data"></div>
+      <div class="pc"><span class="bola" id="bola"></span><b id="nomePc">conectando…</b>
+        <button class="tela-cheia" onclick="telaCheia()" title="Tela cheia">⛶</button></div>
+      <div class="rot" id="sistema"></div>
+      <div class="pedidoMini" id="pedidoMini"></div>
+    </div>
 
-<main id="conteudo">
-  <h2>Pedidos de liberação</h2>
-  <div id="pedidos" class="lista"><div class="vazio">Nenhum pedido.</div></div>
+    <div class="meio">
+      <div class="metricas">
+        <div class="c"><div class="rot">CPU</div><div class="num" id="cpu">–</div><div class="rot" id="cpuSub"></div><div class="barra"><i id="cpuB" style="background:var(--cpu)"></i></div></div>
+        <div class="c"><div class="rot">RAM</div><div class="num" id="ram">–</div><div class="rot" id="ramSub"></div><div class="barra"><i id="ramB" style="background:var(--ram)"></i></div></div>
+        <div class="c"><div class="rot">Disco</div><div class="num" id="disco">–</div><div class="rot" id="discoSub"></div><div class="barra"><i id="discoB" style="background:var(--disco)"></i></div></div>
+        <div class="c"><div class="rot" id="extraRot">Temp.</div><div class="num" id="extra">–</div><div class="rot" id="extraSub"></div><div class="barra"><i id="extraB" style="background:var(--temp)"></i></div></div>
+      </div>
+      <div class="c grafico">
+        <div class="legenda rot"><span><i style="background:var(--cpu)"></i>CPU</span><span><i style="background:var(--ram)"></i>RAM</span><span style="margin-left:auto" id="janela">últimos 5 min</span></div>
+        <svg id="gGeral" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
 
-  <h2>PC</h2>
-  <div class="grade">
-    <div class="cartao"><div class="rotulo">CPU</div><div class="valor" id="cpu">–</div><div class="sub" id="cpuSub"></div><div class="barra"><i id="cpuBarra"></i></div></div>
-    <div class="cartao"><div class="rotulo">RAM</div><div class="valor" id="ram">–</div><div class="sub" id="ramSub"></div><div class="barra"><i id="ramBarra"></i></div></div>
-    <div class="cartao"><div class="rotulo">Disco</div><div class="valor" id="disco">–</div><div class="sub" id="discoSub"></div><div class="barra"><i id="discoBarra"></i></div></div>
-    <div class="cartao"><div class="rotulo">Rede</div><div class="valor" id="rede" style="font-size:18px">–</div><div class="sub" id="redeSub"></div></div>
-    <div class="cartao"><div class="rotulo">Ligado há</div><div class="valor" id="uptime" style="font-size:20px">–</div><div class="sub" id="sistema"></div></div>
-    <div class="cartao" id="cartaoExtra"><div class="rotulo">Temperatura / bateria</div><div class="valor" id="extra" style="font-size:20px">–</div></div>
-  </div>
+    <div class="c lado">
+      <div class="rot">Rede</div>
+      <div class="linha"><span class="num grande" id="desce" style="color:var(--desce)">↓ –</span></div>
+      <div class="linha"><span class="num" id="sobe" style="color:var(--sobe)">↑ –</span></div>
+      <div class="linha" id="linhaUptime"><span class="rot">Ligado há</span><span class="num" id="uptime">–</span></div>
+      <div class="rot" style="margin-top:.6vh">Processos (RAM)</div>
+      <div class="procs" id="procs"></div>
+    </div>
+  </section>
 
-  <h2>Ações</h2>
-  <div id="acoes" class="acoes"><div class="vazio">Nenhuma ação cadastrada.</div></div>
+  <!-- Telas de ações são criadas aqui (quantas forem necessárias) -->
+  <div id="marcaAcoes" hidden></div>
 
-  <h2>Processos que mais usam RAM</h2>
-  <div class="cartao"><table id="processos"></table></div>
-</main>
+  <!-- Histórico -->
+  <section class="tela" id="tHist" data-nome="Histórico">
+    <div class="c"><div class="info"><span class="rot">CPU</span><span class="num" id="hCpu" style="color:var(--cpu)">–</span><span class="rot" id="hCpuMax"></span></div><svg id="gCpu" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
+    <div class="c"><div class="info"><span class="rot">RAM</span><span class="num" id="hRam" style="color:var(--ram)">–</span><span class="rot" id="hRamMax"></span></div><svg id="gRam" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
+    <div class="c"><div class="info"><span class="rot">Rede</span><span class="num" id="hRede" style="color:var(--desce)">–</span><span class="rot" id="hRedeSub"></span></div><svg id="gRede" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
+  </section>
 
+  <!-- Telas de pedidos são criadas aqui -->
+  <div id="marcaPedidos" hidden></div>
+</div>
+
+<nav id="pontos"></nav>
 <div id="aviso"></div>
 
+<section id="login" class="sobre"><div>
+  <div>No PC, abra <b>http://localhost:8765/qr</b> e aponte a câmera do celular para o QR code.</div>
+  <div style="margin-top:10px;color:var(--fraco)">Ou cole aqui o token (ou o link inteiro):</div>
+  <input id="campoToken" placeholder="token" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <div id="erroToken" style="color:var(--erro);font-size:14px;min-height:20px"></div>
+  <button class="sim" id="botaoEntrar" onclick="salvarToken()">Entrar</button>
+</div></section>
+
+<section id="girar" class="sobre"><div>
+  <div class="ic">📱</div>
+  <div style="font-size:18px;font-weight:600">Deite o celular</div>
+  <div style="color:var(--fraco);margin:6px 0 10px">O painel foi feito para a tela na horizontal.</div>
+  <button class="sim" onclick="telaCheia()">Tela cheia deitada</button>
+  <button style="background:var(--borda)" onclick="document.body.classList.add('retrato-ok')">Usar assim</button>
+</div></section>
+
 <script>
-  // ---- token: vem do link (?token=...) na 1ª vez e fica salvo no celular ----
+  // ---------------- token ----------------
   const params = new URLSearchParams(location.search);
-  if (params.get("token")) {
-    localStorage.setItem("token", params.get("token"));
-    history.replaceState(null, "", "/");
-  }
+  if (params.get("token")) { localStorage.setItem("token", params.get("token")); history.replaceState(null, "", "/"); }
   let token = localStorage.getItem("token");
+  let emLogin = false;
 
   async function salvarToken() {
-    let valor = document.getElementById("campoToken").value.trim();
-    const achado = valor.match(/token=([A-Za-z0-9_-]+)/);  // aceita o link inteiro
+    let valor = $("campoToken").value.trim();
+    const achado = valor.match(/token=([A-Za-z0-9_-]+)/);
     if (achado) valor = achado[1];
     valor = valor.replace(/\s+/g, "");
-    const erro = document.getElementById("erroToken"), botao = document.getElementById("botaoEntrar");
+    const erro = $("erroToken"), botao = $("botaoEntrar");
     if (!valor) { erro.textContent = "Digite o token."; return; }
     botao.disabled = true; botao.textContent = "Verificando…"; erro.textContent = "";
     try {
       const r = await fetch("/api/status", { headers: { Authorization: "Bearer " + valor } });
       if (r.status === 401) { erro.textContent = "Token errado. Confira letras maiúsculas e minúsculas."; return; }
       if (!r.ok) { erro.textContent = "O PC respondeu com erro " + r.status + "."; return; }
-      token = valor;
-      localStorage.setItem("token", token);
-      emLogin = false;
-      document.getElementById("login").style.display = "none";
-      document.getElementById("conteudo").style.display = "";
+      token = valor; localStorage.setItem("token", token);
+      emLogin = false; $("login").style.display = "none";
       atualizar();
     } catch (e) {
       erro.textContent = "Não consegui falar com o PC. O painel está rodando?";
-    } finally {
-      botao.disabled = false; botao.textContent = "Entrar";
-    }
+    } finally { botao.disabled = false; botao.textContent = "Entrar"; }
   }
-
-  let emLogin = false;
-  function pedirLogin() {
-    emLogin = true;
-    document.getElementById("login").style.display = "block";
-    document.getElementById("conteudo").style.display = "none";
-  }
+  function pedirLogin() { emLogin = true; $("login").style.display = "flex"; }
 
   async function api(caminho, metodo = "GET") {
     const r = await fetch(caminho, { method: metodo, headers: { Authorization: "Bearer " + token } });
@@ -144,104 +228,214 @@
     return r.json();
   }
 
+  // ---------------- utilidades ----------------
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const hhmm = (t) => new Date(t * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  function aviso(t) { const el = $("aviso"); el.textContent = t; el.classList.add("ver"); clearTimeout(aviso.t); aviso.t = setTimeout(() => el.classList.remove("ver"), 2500); }
+  function duracao(s) { const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}min`; }
+  function vel(kbs) { return kbs >= 1024 ? (kbs / 1024).toFixed(1) + " MB/s" : Math.round(kbs) + " KB/s"; }
+  function corPct(p) { return p >= 90 ? "var(--erro)" : p >= 75 ? "var(--alerta)" : null; }
+  function barra(id, pct, corBase) { const el = $(id); el.style.width = Math.min(pct, 100) + "%"; el.style.background = corPct(pct) || corBase; }
 
-  function aviso(texto) {
-    const el = $("aviso"); el.textContent = texto; el.classList.add("ver");
-    clearTimeout(aviso.t); aviso.t = setTimeout(() => el.classList.remove("ver"), 2500);
+  async function telaCheia() {
+    document.body.classList.add("retrato-ok");
+    try { await document.documentElement.requestFullscreen({ navigationUI: "hide" }); } catch (e) {}
+    try { await screen.orientation.lock("landscape"); } catch (e) {}
   }
 
-  function barra(id, pct) {
-    const el = $(id); el.style.width = pct + "%";
-    el.className = pct >= 90 ? "critico" : pct >= 70 ? "alto" : "";
+  // ---------------- relógio ----------------
+  function relogio() {
+    const d = new Date();
+    $("hora").textContent = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    $("data").textContent = d.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  }
+  relogio(); setInterval(relogio, 1000);
+
+  // ---------------- gráficos ----------------
+  const MAX_PONTOS = 100; // 100 × 3 s = 5 min
+  const hist = { cpu: [], ram: [], desce: [], sobe: [] };
+  function guardar(k, v) { hist[k].push(v); if (hist[k].length > MAX_PONTOS) hist[k].shift(); }
+
+  function desenhar(svg, series, max) {
+    const linhas = [25, 50, 75].map((y) => `<line x1="0" x2="100" y1="${y}" y2="${y}" stroke="#222835" stroke-width="1" vector-effect="non-scaling-stroke"/>`);
+    for (const { dados, cor, area } of series) {
+      if (dados.length < 2) continue;
+      const passo = 100 / (MAX_PONTOS - 1), ini = 100 - (dados.length - 1) * passo;
+      const pts = dados.map((v, i) => `${(ini + i * passo).toFixed(2)},${(100 - Math.min(v / max, 1) * 97).toFixed(2)}`).join(" ");
+      if (area) linhas.push(`<polygon points="${ini},100 ${pts} 100,100" fill="${cor}" opacity=".12"/>`);
+      linhas.push(`<polyline points="${pts}" fill="none" stroke="${cor}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`);
+    }
+    svg.innerHTML = linhas.join("");
+  }
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+  // ---------------- encaixe: mostra só o que cabe ----------------
+  function encaixarLista(el, itensHtml) {
+    el.innerHTML = "";
+    for (const h of itensHtml) {
+      el.insertAdjacentHTML("beforeend", h);
+      if (el.scrollHeight > el.clientHeight + 1) { el.lastElementChild.remove(); break; }
+    }
   }
 
-  function duracao(s) {
-    const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
-    return d ? `${d}d ${h}h` : h ? `${h}h ${m}min` : `${m}min`;
+  // ---------------- telas dinâmicas (ações e pedidos) ----------------
+  // Cria quantas telas forem necessárias para mostrar todos os itens sem rolar.
+  function grade(qtd, largura, altura, minL, minA) {
+    const cols = Math.max(1, Math.floor((largura + 10) / minL));
+    const lins = Math.max(1, Math.floor((altura + 10) / minA));
+    const porTela = cols * lins;
+    const usadas = Math.min(qtd, porTela);
+    const c = Math.min(cols, Math.max(1, usadas)), l = Math.max(1, Math.ceil(usadas / c));
+    return { porTela, cols: c, lins: Math.min(lins, l) };
   }
 
-  function velocidade(kbs) { return kbs >= 1024 ? (kbs / 1024).toFixed(1) + " MB/s" : Math.round(kbs) + " KB/s"; }
-
-  async function atualizarStatus() {
-    const s = await api("/api/status");
-    $("nomePc").textContent = s.nome_pc;
-    $("cpu").textContent = Math.round(s.cpu_pct) + "%"; $("cpuSub").textContent = s.cpu_nucleos + " núcleos"; barra("cpuBarra", s.cpu_pct);
-    $("ram").textContent = Math.round(s.ram.pct) + "%"; $("ramSub").textContent = `${s.ram.usado_gb} de ${s.ram.total_gb} GB`; barra("ramBarra", s.ram.pct);
-    if (s.disco) { $("disco").textContent = Math.round(s.disco.pct) + "%"; $("discoSub").textContent = `${s.disco.usado_gb} de ${s.disco.total_gb} GB`; barra("discoBarra", s.disco.pct); }
-    $("rede").textContent = "↓ " + velocidade(s.rede.descida_kbs); $("redeSub").textContent = "↑ " + velocidade(s.rede.subida_kbs);
-    $("uptime").textContent = duracao(s.ligado_ha_s); $("sistema").textContent = s.sistema;
-    const extra = [];
-    if (s.temperatura_c != null) extra.push(s.temperatura_c + " °C");
-    if (s.bateria) extra.push(s.bateria.pct + "%" + (s.bateria.carregando ? " ⚡" : ""));
-    $("extra").textContent = extra.join(" · ") || "n/d";
-    $("processos").innerHTML = s.top_processos.map((p) => `<tr><td>${esc(p.nome)}</td><td>${p.ram_mb} MB</td></tr>`).join("");
+  function criarTelas(prefixo, nome, marca, itens, minL, minA, render, vazio) {
+    document.querySelectorAll(`.tela[data-grupo="${prefixo}"]`).forEach((t) => t.remove());
+    const larg = innerWidth - 2 * 12, alt = innerHeight - 12 - 26;
+    const g = grade(itens.length || 1, larg, alt, minL, minA);
+    const total = Math.max(1, Math.ceil(itens.length / g.porTela));
+    const porTela = Math.ceil(itens.length / total) || 1;  // divide por igual entre as telas
+    for (let i = 0; i < total; i++) {
+      const parte = itens.slice(i * porTela, (i + 1) * porTela);
+      const s = document.createElement("section");
+      s.className = "tela"; s.dataset.grupo = prefixo;
+      s.dataset.nome = total > 1 ? `${nome} ${i + 1}/${total}` : nome;
+      const div = document.createElement("div");
+      div.className = "grade";
+      const gg = grade(parte.length || 1, larg, alt, minL, minA);
+      div.style.gridTemplateColumns = `repeat(${gg.cols}, 1fr)`;
+      div.style.gridTemplateRows = `repeat(${gg.lins}, 1fr)`;
+      if (!parte.length) div.innerHTML = `<div class="vazio">${vazio}</div>`;
+      parte.forEach((it) => div.appendChild(render(it)));
+      s.appendChild(div);
+      marca.before(s);
+    }
   }
 
-  let pendentesAntes = new Set();
-  async function atualizarPedidos() {
-    const lista = await api("/api/pedidos");
-    const pendentes = new Set(lista.filter((p) => p.estado === "pendente").map((p) => p.id));
-    for (const id of pendentes) if (!pendentesAntes.has(id) && navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    pendentesAntes = pendentes;
-    if (!lista.length) { $("pedidos").innerHTML = '<div class="vazio">Nenhum pedido.</div>'; return; }
-    $("pedidos").innerHTML = lista.slice(0, 10).map((p) => `
-      <div class="cartao pedido">
-        <div class="topo">
-          <div><div class="titulo">${esc(p.titulo)}</div>
-          <div class="sub">${esc(p.detalhe || p.origem)} · ${new Date(p.criado_em * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div></div>
-          <span class="estado ${p.estado}">${p.estado}</span>
-        </div>
-        ${p.estado === "pendente" ? `<div class="botoes">
-          <button class="aprovar" onclick="decidir('${p.id}','aprovar')">✅ Liberar</button>
-          <button class="negar" onclick="decidir('${p.id}','negar')">❌ Negar</button></div>` : ""}
-      </div>`).join("");
+  // ---------------- ações ----------------
+  let acoes = null;
+  function iconeDe(nome) { const m = nome.match(/^(\p{Extended_Pictographic}|\p{Emoji_Presentation}|[⏻↩️⏯⏭⏮])️?\s*/u); return m ? [m[0].trim(), nome.slice(m[0].length)] : ["⚡", nome]; }
+  function montarAcoes() {
+    if (!acoes) return;
+    criarTelas("acoes", "Ações", $("marcaAcoes"), acoes, 150, 110, (a) => {
+      const [ic, txt] = iconeDe(a.nome);
+      const b = document.createElement("button");
+      b.className = "acao" + (a.confirmar ? " perigo" : "");
+      b.innerHTML = `<span class="ic">${esc(ic)}</span><span>${esc(txt)}</span>`;
+      b.onclick = () => executar(a.id, a.confirmar, a.nome);
+      return b;
+    }, "Nenhuma ação cadastrada no config.json");
+    refazerPontos();
+  }
+  async function executar(id, confirmar, nome) {
+    if (confirmar && !confirm(`Executar "${nome}"?`)) return;
+    const r = await api(`/api/acoes/${id}`, "POST");
+    aviso(r.ok ? `${nome}: feito ✓` : `${nome}: erro (${r.codigo})`);
   }
 
+  // ---------------- pedidos ----------------
+  let pedidos = [], assinaturaPedidos = "", pendentesAntes = new Set();
+  function montarPedidos() {
+    criarTelas("pedidos", "Pedidos", $("marcaPedidos"), pedidos, 260, 120, (p) => {
+      const d = document.createElement("div");
+      d.className = "c pedido";
+      d.innerHTML = `<div class="topo"><div class="titulo">${esc(p.titulo)}</div><span class="estado ${p.estado}">${p.estado}</span></div>
+        <div class="rot">${esc(p.detalhe || p.origem)} · ${hhmm(p.criado_em)}</div>
+        ${p.estado === "pendente" ? `<div class="bts"><button class="sim" data-a="aprovar">✅ Liberar</button><button class="nao" data-a="negar">❌ Negar</button></div>` : ""}`;
+      d.querySelectorAll("button").forEach((b) => (b.onclick = () => decidir(p.id, b.dataset.a)));
+      return d;
+    }, "Nenhum pedido ainda");
+    refazerPontos();
+  }
+  function mostrarPedidoMini() {
+    const el = $("pedidoMini"), pend = pedidos.filter((p) => p.estado === "pendente");
+    el.classList.toggle("tem", pend.length > 0);
+    if (!pend.length) { el.innerHTML = `<div class="rot">🔐 Nenhum pedido pendente</div>`; return; }
+    const p = pend[0];
+    el.innerHTML = `<div class="rot" style="color:var(--alerta)">🔐 Pedido · ${hhmm(p.criado_em)}${pend.length > 1 ? ` · +${pend.length - 1} (arraste ⟶)` : ""}</div>
+      <div class="t">${esc(p.titulo)}</div>
+      <div class="bts"><button class="sim" data-a="aprovar">Liberar</button><button class="nao" data-a="negar">Negar</button></div>`;
+    el.querySelectorAll("button").forEach((b) => (b.onclick = () => decidir(p.id, b.dataset.a)));
+  }
   async function decidir(id, acao) {
     await api(`/api/pedidos/${id}/${acao}`, "POST");
     aviso(acao === "aprovar" ? "Liberado ✅" : "Negado ❌");
     atualizarPedidos();
   }
-
-  let acoesCarregadas = false;
-  async function carregarAcoes() {
-    const acoes = await api("/api/acoes");
-    acoesCarregadas = true;
-    if (!acoes.length) return;
-    $("acoes").innerHTML = "";
-    for (const a of acoes) {
-      const b = document.createElement("button");
-      b.textContent = a.nome;
-      b.onclick = () => executar(a.id, a.confirmar, a.nome);
-      $("acoes").appendChild(b);
-    }
+  async function atualizarPedidos() {
+    pedidos = await api("/api/pedidos");
+    const pend = new Set(pedidos.filter((p) => p.estado === "pendente").map((p) => p.id));
+    for (const id of pend) if (!pendentesAntes.has(id) && navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    pendentesAntes = pend;
+    mostrarPedidoMini();
+    const ass = pedidos.map((p) => p.id + p.estado).join();
+    if (ass !== assinaturaPedidos) { assinaturaPedidos = ass; manterTela(montarPedidos); }
   }
 
-  async function executar(id, confirmar, nome) {
-    if (confirmar && !confirm(`Executar "${nome}"?`)) return;
-    const r = await api(`/api/acoes/${id}`, "POST");
-    aviso(r.ok ? `${nome}: feito` : `${nome}: erro (${r.codigo})`);
+  // ---------------- status do PC ----------------
+  let ultimoStatus = null;
+  async function atualizarStatus() {
+    const s = ultimoStatus = await api("/api/status");
+    $("nomePc").textContent = s.nome_pc; $("sistema").textContent = s.sistema;
+    $("cpu").innerHTML = `${Math.round(s.cpu_pct)}<small>%</small>`; $("cpuSub").textContent = `${s.cpu_nucleos} núcleos`; barra("cpuB", s.cpu_pct, "var(--cpu)");
+    $("ram").innerHTML = `${Math.round(s.ram.pct)}<small>%</small>`; $("ramSub").textContent = `${s.ram.usado_gb}/${s.ram.total_gb} GB`; barra("ramB", s.ram.pct, "var(--ram)");
+    if (s.disco) { $("disco").innerHTML = `${Math.round(s.disco.pct)}<small>%</small>`; $("discoSub").textContent = `${Math.round(s.disco.usado_gb)}/${Math.round(s.disco.total_gb)} GB`; barra("discoB", s.disco.pct, "var(--disco)"); }
+    if (s.temperatura_c != null) { $("extraRot").textContent = "Temp."; $("extra").innerHTML = `${s.temperatura_c}<small>°C</small>`; $("extraSub").textContent = "CPU"; barra("extraB", s.temperatura_c, "var(--temp)"); }
+    else if (s.bateria) { $("extraRot").textContent = "Bateria"; $("extra").innerHTML = `${s.bateria.pct}<small>%</small>`; $("extraSub").textContent = s.bateria.carregando ? "carregando" : "na bateria"; barra("extraB", s.bateria.pct, "var(--temp)"); }
+    else { $("extraRot").textContent = "Ligado há"; $("extra").innerHTML = duracao(s.ligado_ha_s).replace(/(\d+)([a-z]+)/g, "$1<small>$2</small>"); $("extraSub").textContent = "sem sensor de temp."; barra("extraB", 0, "var(--temp)"); }
+    $("linhaUptime").style.display = $("extraRot").textContent === "Ligado há" ? "none" : "";
+    $("desce").textContent = "↓ " + vel(s.rede.descida_kbs); $("sobe").textContent = "↑ " + vel(s.rede.subida_kbs);
+    $("uptime").textContent = duracao(s.ligado_ha_s);
+    encaixarLista($("procs"), s.top_processos.map((p) => `<div><span>${esc(p.nome.replace(/\.exe$/i, ""))}</span><span>${p.ram_mb >= 1000 ? (p.ram_mb / 1000).toFixed(1) + " GB" : p.ram_mb + " MB"}</span></div>`));
+
+    guardar("cpu", s.cpu_pct); guardar("ram", s.ram.pct); guardar("desce", s.rede.descida_kbs); guardar("sobe", s.rede.subida_kbs);
+    desenhar($("gGeral"), [{ dados: hist.cpu, cor: css("--cpu"), area: true }, { dados: hist.ram, cor: css("--ram") }], 100);
+    desenhar($("gCpu"), [{ dados: hist.cpu, cor: css("--cpu"), area: true }], 100);
+    desenhar($("gRam"), [{ dados: hist.ram, cor: css("--ram"), area: true }], 100);
+    const maxRede = Math.max(64, ...hist.desce, ...hist.sobe) * 1.1;
+    desenhar($("gRede"), [{ dados: hist.desce, cor: css("--desce"), area: true }, { dados: hist.sobe, cor: css("--sobe") }], maxRede);
+    $("hCpu").textContent = Math.round(s.cpu_pct) + "%"; $("hCpuMax").textContent = "máx " + Math.round(Math.max(...hist.cpu)) + "%";
+    $("hRam").textContent = Math.round(s.ram.pct) + "%"; $("hRamMax").textContent = `${s.ram.usado_gb} GB`;
+    $("hRede").textContent = "↓ " + vel(s.rede.descida_kbs); $("hRedeSub").textContent = "↑ " + vel(s.rede.subida_kbs);
   }
 
+  // ---------------- bolinhas / navegação entre telas ----------------
+  const telasEl = $("telas");
+  const telas = () => [...telasEl.querySelectorAll(".tela")];
+  const telaAtual = () => Math.round(telasEl.scrollLeft / telasEl.clientWidth);
+  function refazerPontos() {
+    const n = telas().length, a = Math.min(telaAtual(), n - 1);
+    $("pontos").innerHTML = telas().map((_, i) => `<i class="${i === a ? "on" : ""}"></i>`).join("") + `<span>${esc(telas()[a]?.dataset.nome || "")}</span>`;
+  }
+  telasEl.addEventListener("scroll", () => { clearTimeout(refazerPontos.t); refazerPontos.t = setTimeout(refazerPontos, 60); }, { passive: true });
+  // Recria telas sem "pular" da tela em que a pessoa está
+  function manterTela(fn) {
+    const atual = telas()[telaAtual()]; fn();
+    const i = telas().indexOf(atual);
+    if (i >= 0) telasEl.scrollLeft = i * telasEl.clientWidth;
+    refazerPontos();
+  }
+  let tRes;
+  addEventListener("resize", () => { clearTimeout(tRes); tRes = setTimeout(() => manterTela(() => { montarAcoes(); montarPedidos(); }), 200); });
+
+  // ---------------- ciclo principal ----------------
   async function atualizar() {
     if (!token) return pedirLogin();
-    if (emLogin) return;  // não fica piscando enquanto a pessoa digita o token
+    if (emLogin) return;
     try {
       await Promise.all([atualizarStatus(), atualizarPedidos()]);
-      if (!acoesCarregadas) carregarAcoes().catch(() => {});
-      $("conexao").textContent = "online"; $("conexao").className = "ok";
+      if (!acoes) { acoes = await api("/api/acoes"); manterTela(montarAcoes); }
+      $("bola").className = "bola ok";
     } catch (e) {
-      $("conexao").textContent = "sem conexão"; $("conexao").className = "erro";
+      $("bola").className = "bola erro";
+      if (!ultimoStatus) $("nomePc").textContent = "sem conexão";
     }
   }
-
-  atualizar();
-  setInterval(atualizar, 3000);
+  montarPedidos(); refazerPontos();
+  atualizar(); setInterval(atualizar, 3000);
 
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
-  // Mantém a tela ligada quando usado como painel fixo (Chrome Android)
   if ("wakeLock" in navigator) {
     const manter = () => navigator.wakeLock.request("screen").catch(() => {});
     manter(); document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && manter());
